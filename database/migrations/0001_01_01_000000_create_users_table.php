@@ -18,6 +18,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['client', 'admin'])->default('client');
+            $table->integer('free_messages_used')->default(0);
+            $table->string('subscription_plan')->nullable();
+            $table->timestamp('subscription_ends_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

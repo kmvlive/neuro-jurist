@@ -30,14 +30,30 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
+        // Получаем guest_id из cookie для переноса счётчика сообщений
+        $guestId = $request->cookie('nj_guest_id');
+        $guestMessagesUsed = session('guest_messages_used', 0);
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'client',
+            'free_messages_used' => $guestMessagesUsed,
         ]);
 
         Auth::login($user);
+
+        // Привязываем чаты гостя к новому пользователю
+        if ($guestId) {
+            \App\Http\Controllers\Chat\ChatController::attachGuestChatsToUser($user, $guestId);
+        }
+
+        // Если лимит исчерпан, редирект на страницу тарифов
+        if ($user->free_messages_used >= 20 && !$user->hasActiveSubscription()) {
+            return redirect()->route('pricing')
+                ->with('info', 'Бесплатный лимит исчерпан. Выберите тариф, чтобы продолжить.');
+        }
 
         return redirect()->route('dashboard');
     }
