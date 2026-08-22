@@ -101,16 +101,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 @if($canSend)
-    // Обработка нажатия Enter
+    // Обработка нажатия Enter - предотвращаем стандартную отправку формы
     messageInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            chatForm.dispatchEvent(new Event('submit'));
+            e.stopPropagation();
+            chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
         }
     });
     
     chatForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        e.stopPropagation();
         
         const message = messageInput.value.trim();
         if (!message) return;
