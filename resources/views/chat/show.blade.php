@@ -89,89 +89,104 @@
 
 @push('scripts')
 <script>
-const chatForm = document.getElementById('chat-form');
-const messageInput = document.getElementById('message-input');
-const messagesContainer = document.getElementById('messages-container');
-const sendBtn = document.getElementById('send-btn');
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const messagesContainer = document.getElementById('messages-container');
+    const sendBtn = document.getElementById('send-btn');
+    
+    if (!chatForm || !messageInput || !sendBtn || !messagesContainer) {
+        console.log('Chat form elements not found');
+        return;
+    }
 
 @if($canSend)
-chatForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const message = messageInput.value.trim();
-    if (!message) return;
-    
-    // Блокируем кнопку на время отправки
-    sendBtn.disabled = true;
-    sendBtn.textContent = 'Отправка...';
-    
-    try {
-        const response = await fetch('{{ route('chat.send') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ content: message })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            // Добавляем сообщение пользователя
-            addMessage(message, 'user');
-            
-            // Добавляем ответ AI
-            addMessage(data.ai_response, 'assistant');
-            
-            // Очищаем поле ввода
-            messageInput.value = '';
-            
-            // Обновляем счётчик (если нужно)
-            // Можно добавить обновление UI с оставшимися сообщениями
-            
-            // Проверяем, не исчерпан ли лимит
-            if (data.remaining_messages === 0) {
-                setTimeout(() => location.reload(), 1000);
-            }
-        } else if (data.limit_exceeded) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert('Ошибка при отправке сообщения');
+    // Обработка нажатия Enter
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit'));
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Произошла ошибка при отправке сообщения');
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.textContent = 'Отправить';
+    });
+    
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        // Блокируем кнопку на время отправки
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Отправка...';
+        
+        try {
+            const response = await fetch('{{ route('chat.send') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ content: message })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                // Добавляем сообщение пользователя
+                addMessage(message, 'user');
+                
+                // Добавляем ответ AI
+                addMessage(data.ai_response, 'assistant');
+                
+                // Очищаем поле ввода
+                messageInput.value = '';
+                
+                // Обновляем счётчик (если нужно)
+                // Можно добавить обновление UI с оставшимися сообщениями
+                
+                // Проверяем, не исчерпан ли лимит
+                if (data.remaining_messages === 0) {
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } else if (data.limit_exceeded) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Ошибка при отправке сообщения');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Произошла ошибка при отправке сообщения');
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Отправить';
+        }
+    });
+@endif
+
+    function addMessage(content, role) {
+        const isUser = role === 'user';
+        const messageHtml = `
+            <div class="flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}">
+                <div class="flex-shrink-0 w-8 h-8 ${isUser ? 'bg-gray-500' : 'bg-primary'} rounded-full flex items-center justify-center text-white">
+                    ${isUser ? '👤' : '⚖️'}
+                </div>
+                <div class="${isUser ? 'bg-blue-100' : 'bg-gray-100'} rounded-lg px-4 py-2 max-w-[80%]">
+                    <p class="text-sm text-gray-900">${escapeHtml(content)}</p>
+                    <span class="text-xs text-gray-500 mt-1 block">Только что</span>
+                </div>
+            </div>
+        `;
+        messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 });
-
-function addMessage(content, role) {
-    const isUser = role === 'user';
-    const messageHtml = `
-        <div class="flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}">
-            <div class="flex-shrink-0 w-8 h-8 ${isUser ? 'bg-gray-500' : 'bg-primary'} rounded-full flex items-center justify-center text-white">
-                ${isUser ? '👤' : '⚖️'}
-            </div>
-            <div class="${isUser ? 'bg-blue-100' : 'bg-gray-100'} rounded-lg px-4 py-2 max-w-[80%]">
-                <p class="text-sm text-gray-900">${escapeHtml(content)}</p>
-                <span class="text-xs text-gray-500 mt-1 block">Только что</span>
-            </div>
-        </div>
-    `;
-    messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-@endif
 </script>
 @endpush
 @endsection
