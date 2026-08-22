@@ -14,16 +14,16 @@
         </p>
         <div class="flex justify-center space-x-4">
             @guest
-                <a href="{{ route('register') }}" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                    Начать бесплатно
-                </a>
-                <a href="{{ route('login') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary transition">
-                    Войти
-                </a>
+            <a href="{{ route('chat.show') }}" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                Начать бесплатно
+            </a>
+            <a href="{{ route('login') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary transition">
+                Войти
+            </a>
             @else
-                <a href="{{ route('dashboard') }}" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                    Перейти в кабинет
-                </a>
+            <a href="{{ route('dashboard') }}" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                Перейти в кабинет
+            </a>
             @endguest
         </div>
     </div>
@@ -62,11 +62,11 @@
                 <h3 class="text-xl font-semibold mb-2">Старт</h3>
                 <p class="text-3xl font-bold text-primary mb-4">Бесплатно</p>
                 <ul class="text-gray-600 mb-6 space-y-2">
-                    <li>• 3 консультации в месяц</li>
+                    <li>• 20 консультаций</li>
                     <li>• Базовый анализ документов</li>
                     <li>• Поддержка по email</li>
                 </ul>
-                <a href="{{ route('register') }}" class="block bg-primary text-white py-2 rounded-lg hover:bg-blue-700">
+                <a href="{{ route('chat.show') }}" class="block bg-primary text-white py-2 rounded-lg hover:bg-blue-700">
                     Попробовать
                 </a>
             </div>
