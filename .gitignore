@@ -1,0 +1,59 @@
+```
+# Laravel-specific ignores
+bootstrap/cache/
+bootstrap/cache/*
+storage/logs/
+storage/framework/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+vendor/
+
+# Node.js dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*
+!.env.example
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+storage/logs/*.log
+
+# Temporary files
+*.tmp
+Thumbs.db
+.DS_Store
+
+# PHP-related
+*.php~
+phpunit.xml.dist
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Cache directories
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Composer
+composer.lock
+```
