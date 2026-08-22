@@ -14,8 +14,8 @@
         </p>
         <div class="flex justify-center space-x-4">
             @guest
-                <a href="{{ route('register') }}" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                    Начать бесплатно
+                <a href="{{ route('chat.show') }}" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    Попробовать бесплатно
                 </a>
                 <a href="{{ route('login') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary transition">
                     Войти
