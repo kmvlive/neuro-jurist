@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PricingController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,18 @@ use Illuminate\Support\Facades\Route;
 
 // Публичные маршруты
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Страница тарифов (доступна без авторизации)
+Route::get('/pricing', [PricingController::class, 'show'])->name('pricing');
+Route::post('/pricing/{plan}', [PricingController::class, 'select'])->name('pricing.select');
+
+// Чат доступен БЕЗ авторизации (гостевой режим)
+Route::get('/chat', [ChatController::class, 'show'])->name('chat.show');
+Route::post('/chat/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+Route::get('/chat/history', [ChatController::class, 'getChats'])->name('chat.history');
+Route::get('/chat/{id}/messages', [ChatController::class, 'getChatMessages'])->name('chat.messages');
+Route::post('/chat/create', [ChatController::class, 'create'])->name('chat.create');
+Route::delete('/chat/{id}', [ChatController::class, 'destroy'])->name('chat.destroy');
 
 // Маршруты аутентификации
 Route::middleware('guest')->group(function () {
@@ -40,13 +53,9 @@ Route::middleware('auth')->group(function () {
     // Личный кабинет клиента
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Чаты
+    // Чаты (дополнительные маршруты для авторизованных)
     Route::prefix('chat')->name('chat.')->group(function () {
-        Route::get('/', [ChatController::class, 'index'])->name('index');
-        Route::get('/{id}', [ChatController::class, 'show'])->name('show');
-        Route::post('/{id}/message', [ChatController::class, 'sendMessage'])->name('message');
-        Route::post('/create', [ChatController::class, 'create'])->name('create');
-        Route::delete('/{id}', [ChatController::class, 'destroy'])->name('destroy');
+        Route::get('/list', [ChatController::class, 'getChats'])->name('list');
     });
 });
 
