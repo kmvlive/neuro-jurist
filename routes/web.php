@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Публичные маршруты
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::redirect('/', '/chat')->name('home');
 
 // Страница тарифов (доступна без авторизации)
 Route::get('/pricing', [PricingController::class, 'show'])->name('pricing');
@@ -28,6 +28,7 @@ Route::get('/chat', [ChatController::class, 'show'])->name('chat.show');
 Route::post('/chat/send', [ChatController::class, 'sendMessage'])->name('chat.send');
 Route::get('/chat/history', [ChatController::class, 'getChats'])->name('chat.history');
 Route::get('/chat/{id}/messages', [ChatController::class, 'getChatMessages'])->name('chat.messages');
+Route::post('/chat/stream', [ChatController::class, 'stream'])->name('chat.stream');
 Route::post('/chat/create', [ChatController::class, 'create'])->name('chat.create');
 Route::delete('/chat/{id}', [ChatController::class, 'destroy'])->name('chat.destroy');
 

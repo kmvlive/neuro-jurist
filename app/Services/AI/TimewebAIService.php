@@ -13,6 +13,40 @@ class TimewebAIService
             ->withBaseUri('https://api.timeweb.ai/v1')
             ->make();
 
+        $messages = $this->buildMessages($userMessage, $history);
+
+        $response = $client->chat()->create([
+            'model' => 'deepseek/deepseek-v4-flash',
+            'messages' => $messages,
+        ]);
+
+        return $response->choices[0]->message->content;
+    }
+
+    public function chatStream(string $userMessage, array $history = []): \Generator
+    {
+        $client = OpenAI::factory()
+            ->withApiKey(env('TIMEWEB_AI_KEY'))
+            ->withBaseUri('https://api.timeweb.ai/v1')
+            ->make();
+
+        $messages = $this->buildMessages($userMessage, $history);
+
+        $stream = $client->chat()->createStreamed([
+            'model' => 'deepseek/deepseek-v4-flash',
+            'messages' => $messages,
+        ]);
+
+        foreach ($stream as $response) {
+            $content = $response->choices[0]->delta->content ?? '';
+            if ($content !== '') {
+                yield $content;
+            }
+        }
+    }
+
+    private function buildMessages(string $userMessage, array $history): array
+    {
         $messages = [
             [
                 'role' => 'system',
@@ -26,11 +60,6 @@ class TimewebAIService
 
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
-        $response = $client->chat()->create([
-            'model' => 'deepseek/deepseek-v4-flash',
-            'messages' => $messages,
-        ]);
-
-        return $response->choices[0]->message->content;
+        return $messages;
     }
 }

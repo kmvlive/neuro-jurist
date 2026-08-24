@@ -26,6 +26,7 @@ class ChatController extends Controller
         $currentChat = null;
         $messages = collect([]);
 
+        // Если указан chat_id — открываем его
         if ($request->filled('chat_id')) {
             $currentChat = Chat::find($request->chat_id);
             if ($currentChat) {
@@ -38,10 +39,23 @@ class ChatController extends Controller
                         $currentChat = null;
                     }
                 }
-                if ($currentChat) {
-                    $messages = $currentChat->messages()->orderBy('created_at')->get();
-                }
             }
+        }
+
+        // Если чат не выбран — берём последний активный чат пользователя/гостя
+        if (!$currentChat) {
+            if ($isGuest) {
+                $currentChat = Chat::where('guest_id', $guestId)
+                    ->whereNull('user_id')
+                    ->latest()
+                    ->first();
+            } else {
+                $currentChat = Auth::user()->chats()->latest()->first();
+            }
+        }
+
+        if ($currentChat) {
+            $messages = $currentChat->messages()->orderBy('created_at')->get();
         }
 
         if ($isGuest) {
@@ -125,7 +139,6 @@ class ChatController extends Controller
             Auth::user()->incrementFreeMessagesUsed();
         }
 
-        // История последних 10 сообщений для контекста
         $history = $chat->messages()
             ->orderBy('created_at')
             ->get()
@@ -147,6 +160,101 @@ class ChatController extends Controller
         ]);
 
         return redirect()->route('chat.show', ['chat_id' => $chat->id]);
+    }
+
+    public function stream(Request $request)
+    {
+        $content = trim((string) $request->input('message', $request->input('content')));
+
+        if ($content === '' || mb_strlen($content) > 5000) {
+            return response()->json(['error' => 'Некорректное сообщение'], 422);
+        }
+
+        $guestId = $this->getGuestId($request);
+        $isGuest = !Auth::check();
+
+        if ($isGuest) {
+            $messagesUsed = session('guest_messages_used', 0);
+            if ($messagesUsed >= self::FREE_LIMIT) {
+                return response()->json(['error' => 'Лимит исчерпан'], 403);
+            }
+        } else {
+            $user = Auth::user();
+            if (!$user->canSendMessages()) {
+                return response()->json(['error' => 'Лимит исчерпан'], 403);
+            }
+        }
+
+        if ($request->filled('chat_id')) {
+            $chat = Chat::findOrFail($request->chat_id);
+            if ($isGuest) {
+                if ($chat->guest_id !== $guestId || $chat->user_id !== null) {
+                    abort(403);
+                }
+            } else {
+                if ($chat->user_id !== Auth::id()) {
+                    abort(403);
+                }
+            }
+        } else {
+            $chat = Chat::create([
+                'user_id' => $isGuest ? null : Auth::id(),
+                'guest_id' => $isGuest ? $guestId : null,
+                'title' => Str::limit($content, 50),
+            ]);
+        }
+
+        Message::create([
+            'chat_id' => $chat->id,
+            'role' => 'user',
+            'content' => $content,
+        ]);
+
+        if ($isGuest) {
+            $messagesUsed = session('guest_messages_used', 0);
+            session(['guest_messages_used' => $messagesUsed + 1]);
+        } else {
+            Auth::user()->incrementFreeMessagesUsed();
+        }
+
+        $history = $chat->messages()
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn($m) => ['role' => $m->role, 'content' => $m->content])
+            ->toArray();
+
+        $aiService = new TimewebAIService();
+        $fullResponse = '';
+
+        return response()->stream(function () use ($aiService, $content, $history, $chat, &$fullResponse) {
+            try {
+                foreach ($aiService->chatStream($content, $history) as $chunk) {
+                    $fullResponse .= $chunk;
+                    echo "data: " . json_encode(['content' => $chunk]) . "\n\n";
+                    ob_flush();
+                    flush();
+                }
+                echo "data: " . json_encode(['done' => true, 'chat_id' => $chat->id]) . "\n\n";
+                ob_flush();
+                flush();
+
+                Message::create([
+                    'chat_id' => $chat->id,
+                    'role' => 'assistant',
+                    'content' => $fullResponse,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Stream error: ' . $e->getMessage());
+                echo "data: " . json_encode(['error' => 'Ошибка сервиса']) . "\n\n";
+                ob_flush();
+                flush();
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ]);
     }
 
     public function getChats(Request $request)
