@@ -6,16 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\Message;
 use App\Models\User;
-use App\Services\AI\TimewebAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
     private const FREE_LIMIT = 20;
 
+    /**
+     * Показать страницу чата (доступно без авторизации)
+     */
     public function show(Request $request)
     {
         $guestId = $this->getGuestId($request);
@@ -23,45 +24,28 @@ class ChatController extends Controller
         $messagesUsed = 0;
         $canSend = true;
         $remainingMessages = self::FREE_LIMIT;
-        $currentChat = null;
-        $messages = collect([]);
-
-        if ($request->filled('chat_id')) {
-            $currentChat = Chat::find($request->chat_id);
-            if ($currentChat) {
-                if ($isGuest) {
-                    if ($currentChat->guest_id !== $guestId || $currentChat->user_id !== null) {
-                        $currentChat = null;
-                    }
-                } else {
-                    if ($currentChat->user_id !== Auth::id()) {
-                        $currentChat = null;
-                    }
-                }
-                if ($currentChat) {
-                    $messages = $currentChat->messages()->orderBy('created_at')->get();
-                }
-            }
-        }
 
         if ($isGuest) {
+            // Гость: проверяем лимит через session
             $messagesUsed = session('guest_messages_used', 0);
             $canSend = $messagesUsed < self::FREE_LIMIT;
             $remainingMessages = max(0, self::FREE_LIMIT - $messagesUsed);
         } else {
+            // Авторизованный пользователь
             $user = Auth::user();
             $messagesUsed = $user->free_messages_used;
             $canSend = $user->canSendMessages();
             $remainingMessages = $user->getRemainingFreeMessages();
         }
 
+        // Получаем чаты для отображения в сайдбаре
         $chats = $this->getChatsForUser($guestId);
 
         return view('chat.show', [
             'chats' => $chats,
-            'currentChat' => $currentChat,
-            'chatId' => $currentChat ? $currentChat->id : null,
-            'messages' => $messages,
+            'currentChat' => null,
+            'chatId' => null,
+            'messages' => [],
             'isGuest' => $isGuest,
             'messagesUsed' => $messagesUsed,
             'canSend' => $canSend,
@@ -70,17 +54,20 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Отправка сообщения в чат
+     */
     public function sendMessage(Request $request)
     {
-        $content = trim((string) $request->input('message', $request->input('content')));
-
-        if ($content === '' || mb_strlen($content) > 5000) {
-            return back()->with('error', 'Сообщение должно содержать от 1 до 5000 символов.');
-        }
+        $request->validate([
+            'content' => ['required', 'string', 'max:5000'],
+            'chat_id' => ['nullable', 'exists:chats,id'],
+        ]);
 
         $guestId = $this->getGuestId($request);
         $isGuest = !Auth::check();
 
+        // Проверка лимита
         if ($isGuest) {
             $messagesUsed = session('guest_messages_used', 0);
             if ($messagesUsed >= self::FREE_LIMIT) {
@@ -93,8 +80,10 @@ class ChatController extends Controller
             }
         }
 
-        if ($request->filled('chat_id')) {
+        // Создаём или получаем чат
+        if ($request->chat_id) {
             $chat = Chat::findOrFail($request->chat_id);
+            // Проверка прав доступа
             if ($isGuest) {
                 if ($chat->guest_id !== $guestId || $chat->user_id !== null) {
                     abort(403);
@@ -108,47 +97,47 @@ class ChatController extends Controller
             $chat = Chat::create([
                 'user_id' => $isGuest ? null : Auth::id(),
                 'guest_id' => $isGuest ? $guestId : null,
-                'title' => Str::limit($content, 50),
+                'title' => Str::limit($messageContent, 50),
             ]);
         }
 
+        // Сохраняем сообщение пользователя
         Message::create([
             'chat_id' => $chat->id,
             'role' => 'user',
-            'content' => $content,
+            'content' => $messageContent,
         ]);
 
+        // Увеличиваем счётчик
         if ($isGuest) {
-            $messagesUsed = session('guest_messages_used', 0);
             session(['guest_messages_used' => $messagesUsed + 1]);
         } else {
             Auth::user()->incrementFreeMessagesUsed();
         }
 
-        // История последних 10 сообщений для контекста
-        $history = $chat->messages()
-            ->orderBy('created_at')
-            ->get()
-            ->map(fn($m) => ['role' => $m->role, 'content' => $m->content])
-            ->toArray();
-
-        try {
-            $aiService = new TimewebAIService();
-            $aiResponse = $aiService->chat($content, $history);
-        } catch (\Throwable $e) {
-            Log::error('Timeweb AI error: ' . $e->getMessage());
-            $aiResponse = 'Извините, сервис временно перегружен. Пожалуйста, попробуйте ещё раз через минуту.';
-        }
-
+        // Заглушка для AI-ответа
+        $aiResponse = "Интеграция AI будет подключена в следующем обновлении";
+        
         Message::create([
             'chat_id' => $chat->id,
             'role' => 'assistant',
             'content' => $aiResponse,
         ]);
 
-        return redirect()->route('chat.show', ['chat_id' => $chat->id]);
+        return response()->json([
+            'success' => true,
+            'chat_id' => $chat->id,
+            'user_message' => $request->content,
+            'ai_response' => $aiResponse,
+            'remaining_messages' => $isGuest 
+                ? max(0, self::FREE_LIMIT - session('guest_messages_used', 0))
+                : Auth::user()->getRemainingFreeMessages(),
+        ]);
     }
 
+    /**
+     * Получить историю чатов
+     */
     public function getChats(Request $request)
     {
         $guestId = $this->getGuestId($request);
@@ -163,12 +152,16 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Получить сообщения конкретного чата
+     */
     public function getChatMessages($chatId)
     {
         $chat = Chat::findOrFail($chatId);
         $guestId = $this->getGuestId(request());
         $isGuest = !Auth::check();
 
+        // Проверка прав доступа
         if ($isGuest) {
             if ($chat->guest_id !== $guestId || $chat->user_id !== null) {
                 abort(403);
@@ -190,11 +183,15 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Создать новый чат
+     */
     public function create()
     {
         $guestId = $this->getGuestId(request());
         $isGuest = !Auth::check();
 
+        // Проверка лимита для создания нового чата
         if ($isGuest) {
             $messagesUsed = session('guest_messages_used', 0);
             if ($messagesUsed >= self::FREE_LIMIT) {
@@ -209,15 +206,19 @@ class ChatController extends Controller
             'title' => 'Новый чат',
         ]);
 
-        return redirect()->route('chat.show', ['chat_id' => $chat->id]);
+        return redirect()->route('chat.show', $chat->id);
     }
 
+    /**
+     * Удалить чат
+     */
     public function destroy($chatId)
     {
         $chat = Chat::findOrFail($chatId);
         $guestId = $this->getGuestId(request());
         $isGuest = !Auth::check();
 
+        // Проверка прав доступа
         if ($isGuest) {
             if ($chat->guest_id !== $guestId || $chat->user_id !== null) {
                 abort(403);
@@ -234,6 +235,9 @@ class ChatController extends Controller
             ->with('success', 'Чат удалён.');
     }
 
+    /**
+     * Получить или создать guest_id
+     */
     private function getGuestId(Request $request): ?string
     {
         if (Auth::check()) {
@@ -241,15 +245,18 @@ class ChatController extends Controller
         }
 
         $guestId = $request->cookie('nj_guest_id');
-
+        
         if (!$guestId) {
             $guestId = (string) Str::uuid();
-            cookie()->queue('nj_guest_id', $guestId, 43200);
+            cookie()->queue('nj_guest_id', $guestId, 43200); // 30 дней
         }
 
         return $guestId;
     }
 
+    /**
+     * Получить чаты для текущего пользователя или гостя
+     */
     private function getChatsForUser(?string $guestId)
     {
         if (Auth::check()) {
@@ -259,6 +266,9 @@ class ChatController extends Controller
         return Chat::forGuest($guestId)->latest()->take(20)->get();
     }
 
+    /**
+     * Привязать чаты гостя к пользователю после регистрации
+     */
     public static function attachGuestChatsToUser(User $user, string $guestId): void
     {
         Chat::where('guest_id', $guestId)

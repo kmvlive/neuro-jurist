@@ -33,7 +33,7 @@
         <div class="bg-white rounded-lg shadow p-6 md:col-span-2">
             <h2 class="text-lg font-semibold mb-4">Быстрые действия</h2>
             <div class="grid sm:grid-cols-2 gap-4">
-                <a href="{{ route('chat.index') }}" class="block p-4 border-2 border-primary rounded-lg hover:bg-blue-50 transition text-center">
+                <a href="{{ route('chat.show') }}" class="block p-4 border-2 border-primary rounded-lg hover:bg-blue-50 transition text-center">
                     <div class="text-3xl mb-2">💬</div>
                     <div class="font-semibold">Новая консультация</div>
                     <div class="text-sm text-gray-600">Задать вопрос юристу</div>
@@ -61,7 +61,7 @@
     <div class="mt-8 bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-semibold">Последние консультации</h2>
-            <a href="{{ route('chat.index') }}" class="text-primary hover:underline">Все чаты →</a>
+            <a href="{{ route('chat.show') }}" class="text-primary hover:underline">Все чаты →</a>
         </div>
         <div class="text-center py-8 text-gray-500">
             У вас пока нет консультаций. Начните новую консультацию!

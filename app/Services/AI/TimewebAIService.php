@@ -2,69 +2,35 @@
 
 namespace App\Services\AI;
 
-use Illuminate\Support\Facades\Http;
+use OpenAI;
 
 class TimewebAIService
 {
-    protected string $apiKey;
-    protected string $apiUrl;
-
-    public function __construct()
+    public function chat(string $userMessage, array $history = []): string
     {
-        $this->apiKey = config('services.timeweb_ai.api_key');
-        $this->apiUrl = config('services.timeweb_ai.api_url', 'https://api.timeweb.ai');
-    }
+        $client = OpenAI::factory()
+            ->withApiKey(env('TIMEWEB_AI_KEY'))
+            ->withBaseUri('https://api.timeweb.ai/v1')
+            ->make();
 
-    /**
-     * Отправить запрос к AI для юридической консультации
-     */
-    public function getLegalAdvice(string $message, array $context = []): array
-    {
-        $response = Http::withHeaders([
-            'Authorization' => "Bearer {$this->apiKey}",
-            'Content-Type' => 'application/json',
-        ])->post("{$this->apiUrl}/v1/chat/completions", [
-            'model' => 'gpt-4',
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'Вы — профессиональный юрист-консультант. Отвечайте на вопросы четко, профессионально, с ссылками на законодательство РФ.',
-                ],
-                ...$context,
-                [
-                    'role' => 'user',
-                    'content' => $message,
-                ],
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => 'Ты — «Нейро-юрист», профессиональный AI-ассистент по праву Российской Федерации. Отвечай понятно, структурированно и кратко. Ссылайся на законы и статьи, когда это уместно. Не выдумывай нормы права. В сложных случаях рекомендуй обратиться к живому юристу.',
             ],
-            'temperature' => 0.7,
-            'max_tokens' => 2000,
-        ]);
+        ];
 
-        if ($response->failed()) {
-            throw new \Exception('Ошибка при получении ответа от AI: ' . $response->body());
+        foreach ($history as $h) {
+            $messages[] = ['role' => $h['role'], 'content' => $h['content']];
         }
 
-        $data = $response->json();
+        $messages[] = ['role' => 'user', 'content' => $userMessage];
 
-        return [
-            'message' => $data['choices'][0]['message']['content'] ?? '',
-            'usage' => $data['usage'] ?? [],
-        ];
-    }
+        $response = $client->chat()->create([
+            'model' => 'deepseek/deepseek-v4-flash',
+            'messages' => $messages,
+        ]);
 
-    /**
-     * Анализ документа
-     */
-    public function analyzeDocument(string $documentText, string $analysisType = 'general'): array
-    {
-        $prompts = [
-            'general' => 'Проанализируйте данный документ и укажите на потенциальные юридические риски.',
-            'contract' => 'Проверьте договор на соответствие законодательству РФ и укажите на спорные моменты.',
-            'claim' => 'Оцените правовую обоснованность данной претензии и дайте рекомендации.',
-        ];
-
-        $prompt = $prompts[$analysisType] ?? $prompts['general'];
-
-        return $this->getLegalAdvice("{$prompt}\n\nТекст документа:\n{$documentText}");
+        return $response->choices[0]->message->content;
     }
 }
