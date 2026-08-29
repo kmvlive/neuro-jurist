@@ -10,15 +10,35 @@
         <p class="text-gray-600 dark:text-gray-400">Всего доступных тем: <span class="font-semibold">{{ $totalPrompts }}</span></p>
     </div>
 
+    {{-- Оглавление --}}
+    <div class="mb-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Разделы каталога</h3>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            @foreach($sections as $section)
+                <a href="#{{ $section->slug }}" class="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-sm transition">
+                    <span class="text-xl">{{ $section->icon }}</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $section->name }}</span>
+                </a>
+            @endforeach
+        </div>
+    </div>
+
     {{-- Разделы --}}
     <div class="space-y-8">
         @foreach($sections as $section)
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 {{-- Заголовок раздела --}}
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-750 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-                        <span class="mr-2">{{ $section->icon }}</span>{{ $section->name }}
-                    </h2>
+                <div id="{{ $section->slug }}" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-750 px-6 py-4 border-b border-gray-200 dark:border-gray-700 scroll-mt-20">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                            <a href="#{{ $section->slug }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">
+                                <span class="mr-2">{{ $section->icon }}</span>{{ $section->name }}
+                            </a>
+                        </h2>
+                        <button type="button" onclick="copySectionLink('{{ $section->slug }}')" class="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition" title="Скопировать ссылку на раздел">
+                            🔗
+                        </button>
+                    </div>
                 </div>
 
                 <div class="p-6">
@@ -59,6 +79,39 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function copySectionLink(slug) {
+    const url = window.location.origin + window.location.pathname + '#' + slug;
+    navigator.clipboard.writeText(url).then(() => {
+        // Показываем уведомление
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
+        toast.textContent = '✓ Ссылка скопирована!';
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    });
+}
+
+// Плавная прокрутка к якорю при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash) {
+        const target = document.querySelector(window.location.hash);
+        if (target) {
+            setTimeout(() => {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }
+});
+</script>
+@endpush
 
 cat > /var/www/neuro-jurist/resources/views/prompts/_card.blade.php << 'EOF'
 <a href="{{ route('chat.show', ['prompt' => $prompt->key]) }}" 
