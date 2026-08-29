@@ -235,10 +235,6 @@
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="text-xs opacity-75">{{ $msg->created_at->diffForHumans() }}</span>
                                     <button type="button" class="copy-btn text-xs opacity-70 hover:opacity-100 text-white" data-raw="{{ e($msg->content) }}" title="Копировать">📋</button>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
                 @endforeach
             @else
                 <div class="flex justify-start">
@@ -312,16 +308,21 @@
             
             @if($messages->isEmpty())
             <div class="quick-scroll flex sm:grid sm:grid-cols-2 gap-2 mt-3 overflow-x-auto sm:overflow-visible -mx-1 px-1">
-                @foreach($quickPrompts as $p)
+                @foreach($quickPrompts->take(10) as $p)
                     <div class="quick-prompt-wrapper flex items-center gap-1 flex-shrink-0">
                         <button type="button" class="quick-prompt whitespace-nowrap sm:whitespace-normal text-left px-3 py-2 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg hover:bg-blue-100 dark:hover:bg-gray-600 transition text-sm flex-1" data-prompt-key="{{ $p->key }}">{{ $p->icon }} {{ $p->title }}</button>
                         <button type="button" class="share-prompt-btn flex-shrink-0 px-2 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-xs" data-prompt-key="{{ $p->key }}" title="Скопировать ссылку">📋</button>
                     </div>
                 @endforeach
             </div>
+            @if($quickPrompts->count() > 10)
+                <div class="mt-3 text-center">
+                    <a href="{{ route('prompts.index') }}" class="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition">
+                        Весь каталог ({{ $quickPrompts->count() }} тем) →
+                    </a>
+                </div>
             @endif
-        </div>
-    </div>
+            @endif
 </div>
 
 @push('scripts')

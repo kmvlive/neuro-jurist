@@ -3,9 +3,17 @@
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\Admin\AdminPlansController;
+use App\Http\Controllers\Admin\AdminFooterLinksController;
+use App\Http\Controllers\Admin\AdminStatsController;
+use App\Http\Controllers\Admin\AdminSettingsController;
+use App\Http\Controllers\Admin\AdminPromoCodesController;
+use App\Http\Controllers\Admin\AdminQuickPromptsController;
+use App\Http\Controllers\Admin\AdminPromptCategoriesController;
+use App\Http\Controllers\Admin\AdminRevenueController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PromptCatalogController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\TBankWebhookController;
 use App\Http\Middleware\AdminMiddleware;
@@ -19,6 +27,9 @@ Route::redirect('/', '/chat')->name('home');
 Route::get('/templates', [\App\Http\Controllers\TemplateController::class, 'index'])->name('templates.index');
 Route::get('/templates/{key}', [\App\Http\Controllers\TemplateController::class, 'show'])->name('templates.show');
 Route::post('/templates/{key}/generate', [\App\Http\Controllers\TemplateController::class, 'generate'])->name('templates.generate');
+
+// Каталог промтов
+Route::get("/prompts", [PromptCatalogController::class, "index"])->name("prompts.index");
 
 Route::get('/pricing', [PricingController::class, 'show'])->name('pricing');
 Route::post('/pricing/{plan}', [PricingController::class, 'select'])->name('pricing.select');
@@ -56,13 +67,6 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-use App\Http\Controllers\Admin\AdminFooterLinksController;
-use App\Http\Controllers\Admin\AdminStatsController;
-use App\Http\Controllers\Admin\AdminSettingsController;
-use App\Http\Controllers\Admin\AdminPromoCodesController;
-use App\Http\Controllers\Admin\AdminQuickPromptsController;
-use App\Http\Controllers\Admin\AdminRevenueController;
-
 Route::prefix('admin')->name('admin.')->middleware(['auth', AdminMiddleware::class])->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::resource('users', AdminUsersController::class);
@@ -77,4 +81,5 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AdminMiddleware::cla
     Route::get('quick-prompts/{quickPrompt}/ad', [AdminQuickPromptsController::class, 'editAd'])->name('quick-prompts.ad.edit');
     Route::put('quick-prompts/{quickPrompt}/ad', [AdminQuickPromptsController::class, 'updateAd'])->name('quick-prompts.ad.update');
     Route::post('quick-prompts/toggle-all-ads', [AdminQuickPromptsController::class, 'toggleAllAds'])->name('quick-prompts.toggle-all-ads');
+    Route::resource("prompt-categories", AdminPromptCategoriesController::class);
 });

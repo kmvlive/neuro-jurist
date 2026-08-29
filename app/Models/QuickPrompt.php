@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class QuickPrompt extends Model
 {
-    protected $fillable = ['title', 'key', 'icon', 'text', 'active', 'sort_order'];
+    protected $fillable = ['category_id', 'title', 'key', 'icon', 'text', 'active', 'sort_order'];
+
+    public function category()
+    {
+        return $this->belongsTo(PromptCategory::class);
+    }
 
     public function ad()
     {

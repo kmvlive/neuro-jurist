@@ -17,6 +17,7 @@
                 <input type="hidden" name="action" value="disable">
                 <button type="submit" onclick="return confirm('Отключить всю рекламу?')" class="bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 text-sm font-medium">✕ Отключить всю рекламу</button>
             </form>
+            <a href="{{ route('admin.prompt-categories.index') }}" class="bg-indigo-500 text-white px-4 py-3 rounded-lg hover:bg-indigo-600 text-sm font-medium">📚 Категории</a>
             <a href="{{ route('admin.quick-prompts.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-center font-medium">+ Создать промпт</a>
         </div>
     </div>
@@ -38,6 +39,13 @@
                             <span class="text-2xl">{{ $p->icon }}</span>
                             <span class="font-semibold text-gray-900">{{ $p->title }}</span>
                             <span class="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{{ $p->key }}</span>
+                            @if($p->category)
+                                <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
+                                    {{ $p->category->icon }} {{ $p->category->parent ? $p->category->parent->name . ' → ' : '' }}{{ $p->category->name }}
+                                </span>
+                            @else
+                                <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">Без категории</span>
+                            @endif
                             @if(!$p->active)
                                 <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Неактивен</span>
                             @endif

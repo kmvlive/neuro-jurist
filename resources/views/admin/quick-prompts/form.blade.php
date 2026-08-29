@@ -28,6 +28,21 @@
         </div>
 
         <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Категория в каталоге</label>
+            <select name="category_id" class="w-full border border-gray-300 rounded px-3 py-2">
+                <option value="">— Без категории —</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" @selected(old('category_id', $prompt?->category_id) == $cat->id)>
+                        {{ $cat->parent ? '    └─ ' : '' }}{{ $cat->icon }} {{ $cat->name }}
+                    </option>
+                @endforeach
+            </select>
+            <p class="text-xs text-gray-500 mt-1">
+                Управление разделами: <a href="{{ route('admin.prompt-categories.index') }}" class="text-primary hover:underline">Категории промтов →</a>
+            </p>
+        </div>
+
+        <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Порядок сортировки</label>
             <input type="number" name="sort_order" value="{{ old('sort_order', $prompt?->sort_order ?? 0) }}" class="w-full border border-gray-300 rounded px-3 py-2">
         </div>

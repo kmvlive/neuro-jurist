@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\QuickPrompt;
+use App\Models\PromptCategory;
 use App\Models\Ad;
 use Illuminate\Http\Request;
 
@@ -11,13 +12,14 @@ class AdminQuickPromptsController extends Controller
 {
     public function index()
     {
-        $prompts = QuickPrompt::orderBy('sort_order')->get();
+        $prompts = QuickPrompt::with('category')->orderBy('sort_order')->get();
         return view('admin.quick-prompts.index', compact('prompts'));
     }
 
     public function create()
     {
-        return view('admin.quick-prompts.form', ['prompt' => null]);
+        $categories = PromptCategory::with('parent')->orderByRaw('COALESCE(parent_id, id) ASC, parent_id IS NOT NULL ASC, sort_order ASC')->get();
+        return view('admin.quick-prompts.form', ['prompt' => null, 'categories' => $categories]);
     }
 
     public function store(Request $request)
@@ -28,14 +30,17 @@ class AdminQuickPromptsController extends Controller
             'icon' => 'required|string|max:10',
             'active' => 'boolean',
             'sort_order' => 'integer',
+            'category_id' => 'nullable|exists:prompt_categories,id',
         ]);
+        if ($request->category_id === '' || $request->category_id === '0') $data['category_id'] = null;
         QuickPrompt::create($data);
         return redirect()->route('admin.quick-prompts.index')->with('success', 'Промпт создан');
     }
 
     public function edit(QuickPrompt $quickPrompt)
     {
-        return view('admin.quick-prompts.form', ['prompt' => $quickPrompt]);
+        $categories = PromptCategory::with('parent')->orderByRaw('COALESCE(parent_id, id) ASC, parent_id IS NOT NULL ASC, sort_order ASC')->get();
+        return view('admin.quick-prompts.form', ['prompt' => $quickPrompt, 'categories' => $categories]);
     }
 
     public function update(Request $request, QuickPrompt $quickPrompt)
@@ -46,7 +51,9 @@ class AdminQuickPromptsController extends Controller
             'icon' => 'required|string|max:10',
             'active' => 'boolean',
             'sort_order' => 'integer',
+            'category_id' => 'nullable|exists:prompt_categories,id',
         ]);
+        if ($request->category_id === '' || $request->category_id === '0') $data['category_id'] = null;
         $quickPrompt->update($data);
         return redirect()->route('admin.quick-prompts.index')->with('success', 'Промпт обновлён');
     }
