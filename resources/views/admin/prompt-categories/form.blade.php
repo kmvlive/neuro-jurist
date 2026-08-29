@@ -46,7 +46,8 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <input type="checkbox" name="active" id="active" @checked(old('active', $category?->active ?? true)) class="rounded">
+            <input type="hidden" name="active" value="0">
+            <input type="checkbox" name="active" id="active" value="1" @checked(old('active', $category?->active ?? true)) class="rounded">
             <label for="active" class="text-gray-700 dark:text-gray-300">Активна</label>
         </div>
 

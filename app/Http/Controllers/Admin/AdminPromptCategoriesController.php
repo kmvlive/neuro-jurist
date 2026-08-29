@@ -31,7 +31,7 @@ class AdminPromptCategoriesController extends Controller
             'slug' => 'required|string|max:50|unique:prompt_categories,slug|regex:/^[a-z0-9_-]+$/',
             'icon' => 'nullable|string|max:10',
             'sort_order' => 'integer',
-            'active' => 'boolean',
+            'active' => 'in:0,1',
         ]);
 
         $data['active'] = $request->has('active');
@@ -58,7 +58,7 @@ class AdminPromptCategoriesController extends Controller
             'slug' => 'required|string|max:50|unique:prompt_categories,slug,' . $promptCategory->id . '|regex:/^[a-z0-9_-]+$/',
             'icon' => 'nullable|string|max:10',
             'sort_order' => 'integer',
-            'active' => 'boolean',
+            'active' => 'in:0,1',
         ]);
 
         $data['active'] = $request->has('active');
