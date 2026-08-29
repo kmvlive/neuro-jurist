@@ -313,7 +313,10 @@
             @if($messages->isEmpty())
             <div class="quick-scroll flex sm:grid sm:grid-cols-2 gap-2 mt-3 overflow-x-auto sm:overflow-visible -mx-1 px-1">
                 @foreach($quickPrompts as $p)
-                    <button type="button" class="quick-prompt flex-shrink-0 whitespace-nowrap sm:whitespace-normal text-left px-3 py-2 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg hover:bg-blue-100 dark:hover:bg-gray-600 transition text-sm" data-prompt-key="{{ $p->key }}">{{ $p->icon }} {{ $p->title }}</button>
+                    <div class="quick-prompt-wrapper flex items-center gap-1 flex-shrink-0">
+                        <button type="button" class="quick-prompt whitespace-nowrap sm:whitespace-normal text-left px-3 py-2 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg hover:bg-blue-100 dark:hover:bg-gray-600 transition text-sm flex-1" data-prompt-key="{{ $p->key }}">{{ $p->icon }} {{ $p->title }}</button>
+                        <button type="button" class="share-prompt-btn flex-shrink-0 px-2 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-xs" data-prompt-key="{{ $p->key }}" title="Скопировать ссылку">📋</button>
+                    </div>
                 @endforeach
             </div>
             @endif
@@ -326,6 +329,36 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // === АВТООТПРАВКА ПО ССЫЛКЕ ?prompt=KEY ===
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoPrompt = urlParams.get('prompt');
+    if (autoPrompt) {
+        const promptData = @json($quickPrompts->keyBy('key'));
+        const promptText = promptData[autoPrompt]?.text;
+        
+        if (promptText) {
+            // Небольшая задержка, чтобы всё загрузилось
+            setTimeout(() => {
+                const btn = document.querySelector(`.quick-prompt[data-prompt-key="${autoPrompt}"]`);
+                if (btn) {
+                    btn.click(); // Активируем chip с темой
+                    
+                    const inputEl = document.getElementById('message');
+                    const formEl = document.getElementById('chat-form');
+                    
+                    if (inputEl && formEl) {
+                        inputEl.value = promptText;
+                        // Ещё задержка перед автоотправкой
+                        setTimeout(() => {
+                            if (inputEl.value.trim() && !inputEl.disabled) {
+                                formEl.dispatchEvent(new Event('submit'));
+                            }
+                        }, 300);
+                    }
+                }
+            }, 500);
+        }
+    }
     // === Markdown ===
     if (typeof marked !== 'undefined') {
         marked.setOptions({ breaks: true, gfm: true });
@@ -702,6 +735,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 chip.classList.add('flex');
                 input.focus();
             }
+        });
+    });
+
+    // === КОПИРОВАНИЕ ССЫЛКИ НА КВИК-ПРОМТ ===
+    document.querySelectorAll('.share-prompt-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const key = this.getAttribute('data-prompt-key');
+            const shareUrl = window.location.origin + window.location.pathname + '?prompt=' + encodeURIComponent(key);
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                // Временная визуальная обратная связь
+                const originalText = this.textContent;
+                this.textContent = '✅';
+                this.classList.add('bg-green-100', 'dark:bg-green-900');
+                setTimeout(() => {
+                    this.textContent = originalText;
+                    this.classList.remove('bg-green-100', 'dark:bg-green-900');
+                }, 1500);
+            }).catch(err => {
+                // Fallback для старых браузеров
+                const textArea = document.createElement('textarea');
+                textArea.value = shareUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const originalText = this.textContent;
+                this.textContent = '✅';
+                setTimeout(() => { this.textContent = originalText; }, 1500);
+            });
         });
     });
 

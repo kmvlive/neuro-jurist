@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class QuickPrompt extends Model
 {
-    protected $fillable = ['title', 'key', 'icon', 'active', 'sort_order'];
+    protected $fillable = ['title', 'key', 'icon', 'text', 'active', 'sort_order'];
 
     public function ad()
     {
