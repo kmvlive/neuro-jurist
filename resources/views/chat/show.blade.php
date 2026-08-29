@@ -235,6 +235,8 @@
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="text-xs opacity-75">{{ $msg->created_at->diffForHumans() }}</span>
                                     <button type="button" class="copy-btn text-xs opacity-70 hover:opacity-100 text-white" data-raw="{{ e($msg->content) }}" title="Копировать">📋</button>
+                                </div>
+                            @endif
                 @endforeach
             @else
                 <div class="flex justify-start">
