@@ -13,6 +13,9 @@ class Chat extends Model
         'user_id',
         'guest_id',
         'title',
+        'prompt_key',
+        'category',
+        'summary',
     ];
 
     /**

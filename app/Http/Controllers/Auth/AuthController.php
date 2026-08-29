@@ -43,6 +43,7 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+        $user->update(['last_login_at' => now()]);
 
         // Привязываем чаты гостя к новому пользователю
         if ($guestId) {
@@ -80,6 +81,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+            $user->update(['last_login_at' => now()]);
             
             if ($user->isAdmin()) {
                 return redirect()->route('admin.dashboard');

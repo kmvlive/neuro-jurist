@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use App\View\Composers\SubscriptionComposer;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UniSenderTransport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Mail::extend('unisender', function (array $config = []) {
+            return new UniSenderTransport();
+        });
+        
+        View::composer('*', SubscriptionComposer::class);
     }
 }

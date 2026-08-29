@@ -3,60 +3,66 @@
 namespace App\Services\Payment;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TBankPaymentService
 {
-    protected string $terminalKey;
-    protected string $secretKey;
-    protected string $apiUrl;
+    protected ?string $terminalKey = null;
+    protected ?string $password = null;
+    protected ?string $apiUrl = null;
 
     public function __construct()
     {
-        $this->terminalKey = config('services.tbank.terminal_key');
-        $this->secretKey = config('services.tbank.secret_key');
-        $this->apiUrl = config('services.tbank.payment_url', 'https://rest-api-test.tinkoff.ru/api/v2');
+        $this->terminalKey = (string) config('services.tbank.terminal_key', '');
+        $this->password = (string) config('services.tbank.password', '');
+        $this->apiUrl = (string) config('services.tbank.payment_url', 'https://securepay.tinkoff.ru/v2/');
     }
 
-    /**
-     * Инициализация платежа
-     */
     public function initiatePayment(array $paymentData): array
     {
+        if (empty($this->terminalKey) || empty($this->password)) {
+            throw new \Exception('Т-Банк не настроен: проверьте .env');
+        }
+
         $postData = [
             'TerminalKey' => $this->terminalKey,
-            'Amount' => $paymentData['amount'], // сумма в копейках
+            'Amount' => (int) $paymentData['amount'],
             'OrderId' => $paymentData['order_id'],
             'Description' => $paymentData['description'] ?? 'Оплата услуг Нейро-юрист',
-            'PaymentType' => $paymentData['payment_type'] ?? 'O',
-            'PayType' => $paymentData['pay_type'] ?? 'O',
-            'IP' => $paymentData['ip'] ?? request()->ip(),
+            'DATA' => [
+                'Email' => $paymentData['email'] ?? '',
+                'UserId' => (string) ($paymentData['user_id'] ?? ''),
+            ],
         ];
 
-        $signature = $this->generateSignature($postData);
-        $postData['Token'] = $signature;
+        $postData['Token'] = $this->generateSignature($postData);
 
-        $response = Http::asJson()->post("{$this->apiUrl}/Init", $postData);
+        Log::info('Tinkoff Init request', $postData);
+
+        $response = Http::timeout(30)
+            ->withoutVerifying()
+            ->asJson()
+            ->post($this->apiUrl . 'Init', $postData);
+
+        $data = $response->json();
+
+        Log::info('Tinkoff Init response', $data ?? []);
 
         if ($response->failed()) {
             throw new \Exception('Ошибка при инициализации платежа: ' . $response->body());
         }
 
-        $data = $response->json();
-
-        if ($data['Status'] !== 'OK') {
-            throw new \Exception('Платеж не инициирован: ' . ($data['Message'] ?? 'Неизвестная ошибка'));
+        if (!($data['Success'] ?? false)) {
+            throw new \Exception('Платёж не инициирован: ' . ($data['Message'] ?? 'Неизвестная ошибка') . ' | ErrorCode: ' . ($data['ErrorCode'] ?? 'N/A'));
         }
 
         return [
             'payment_id' => $data['PaymentId'] ?? null,
             'payment_url' => $data['PaymentURL'] ?? null,
-            'status' => $data['Status'],
+            'status' => $data['Status'] ?? 'NEW',
         ];
     }
 
-    /**
-     * Проверка статуса платежа
-     */
     public function checkPaymentStatus(string $paymentId): array
     {
         $postData = [
@@ -64,45 +70,50 @@ class TBankPaymentService
             'PaymentId' => $paymentId,
         ];
 
-        $signature = $this->generateSignature($postData);
-        $postData['Token'] = $signature;
+        $postData['Token'] = $this->generateSignature($postData);
 
-        $response = Http::asJson()->post("{$this->apiUrl}/GetState", $postData);
+        $response = Http::timeout(30)
+            ->withoutVerifying()
+            ->asJson()
+            ->post($this->apiUrl . 'GetState', $postData);
 
         if ($response->failed()) {
-            throw new \Exception('Ошибка при проверке статуса платежа: ' . $response->body());
+            throw new \Exception('Ошибка при проверке статуса: ' . $response->body());
         }
 
-        $data = $response->json();
-
-        return [
-            'status' => $data['Status'] ?? 'UNKNOWN',
-            'payment_id' => $data['PaymentId'] ?? null,
-            'order_id' => $data['OrderId'] ?? null,
-            'amount' => $data['Amount'] ?? null,
-        ];
+        return $response->json() ?? ['Status' => 'UNKNOWN'];
     }
 
     /**
-     * Генерация подписи для запроса
+     * Правильный алгоритм подписи Т-Банка v2:
+     * 1. Добавить Password как параметр
+     * 2. Убрать Token
+     * 3. Убрать DATA (не участвует в подписи)
+     * 4. Отсортировать по ключам
+     * 5. Склеить значения
+     * 6. SHA256
      */
     protected function generateSignature(array $data): string
     {
-        $values = [];
-        
-        foreach ($data as $key => $value) {
-            $values[] = $value;
+        unset($data['Token']);
+        unset($data['DATA']);
+
+        $data['Password'] = $this->password;
+
+        ksort($data);
+
+        $concatenated = '';
+        foreach ($data as $value) {
+            if (is_bool($value)) {
+                $concatenated .= $value ? 'true' : 'false';
+            } else {
+                $concatenated .= $value;
+            }
         }
 
-        $concatenated = implode('', $values);
-        $signature = hash('sha256', $this->secretKey . $concatenated);
-
-        return $signature;
+        return hash('sha256', $concatenated);
     }
 
-    /**
-     * Возврат платежа (Refund)
-     */
     public function refundPayment(string $paymentId, int $amount): array
     {
         $postData = [
@@ -111,20 +122,17 @@ class TBankPaymentService
             'Amount' => $amount,
         ];
 
-        $signature = $this->generateSignature($postData);
-        $postData['Token'] = $signature;
+        $postData['Token'] = $this->generateSignature($postData);
 
-        $response = Http::asJson()->post("{$this->apiUrl}/Cancel", $postData);
+        $response = Http::timeout(30)
+            ->withoutVerifying()
+            ->asJson()
+            ->post($this->apiUrl . 'Cancel', $postData);
 
         if ($response->failed()) {
-            throw new \Exception('Ошибка при возврате платежа: ' . $response->body());
+            throw new \Exception('Ошибка при возврате: ' . $response->body());
         }
 
-        $data = $response->json();
-
-        return [
-            'status' => $data['Status'] ?? 'ERROR',
-            'payment_id' => $data['PaymentId'] ?? null,
-        ];
+        return $response->json() ?? ['Status' => 'ERROR'];
     }
 }

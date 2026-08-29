@@ -2,23 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Message extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'chat_id',
         'role',
         'content',
+        'file_name',
+        'file_path',
+        'is_ad'
     ];
 
-    /**
-     * Get the chat that owns the message.
-     */
-    public function chat()
+    protected $casts = [
+        'is_ad' => 'boolean',
+    ];
+
+    public function chat(): BelongsTo
     {
         return $this->belongsTo(Chat::class);
     }

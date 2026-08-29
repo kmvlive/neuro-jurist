@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\QuickPrompt;
+use App\Models\Ad;
+use App\Services\DocumentParser;
 use App\Services\AI\TimewebAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,7 +62,9 @@ class ChatController extends Controller
         }
 
         if ($isGuest) {
-            $messagesUsed = session('guest_messages_used', 0);
+            $messagesUsed = Message::whereHas('chat', function ($q) use ($guestId) {
+                $q->where('guest_id', $guestId)->whereNull('user_id');
+            })->where('role', 'user')->count();
             $canSend = $messagesUsed < self::FREE_LIMIT;
             $remainingMessages = max(0, self::FREE_LIMIT - $messagesUsed);
         } else {
@@ -81,6 +86,7 @@ class ChatController extends Controller
             'canSend' => $canSend,
             'remainingMessages' => $remainingMessages,
             'freeLimit' => self::FREE_LIMIT,
+            'quickPrompts' => QuickPrompt::where('active', true)->orderBy('sort_order')->get(),
         ]);
     }
 
@@ -96,7 +102,9 @@ class ChatController extends Controller
         $isGuest = !Auth::check();
 
         if ($isGuest) {
-            $messagesUsed = session('guest_messages_used', 0);
+            $messagesUsed = Message::whereHas('chat', function ($q) use ($guestId) {
+                $q->where('guest_id', $guestId)->whereNull('user_id');
+            })->where('role', 'user')->count();
             if ($messagesUsed >= self::FREE_LIMIT) {
                 return back()->with('error', 'Бесплатный лимит исчерпан. Зарегистрируйтесь, чтобы сохранить историю консультаций.');
             }
@@ -126,16 +134,84 @@ class ChatController extends Controller
             ]);
         }
 
+        // === ОБРАБОТКА ЗАГРУЖЕННОГО ФАЙЛА ===
+        $fileName = null;
+        $filePath = null;
+        $fileText = '';
+        
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $allowed = DocumentParser::ALLOWED_EXT;
+            
+            if (!in_array($ext, $allowed)) {
+                return back()->with('error', 'Недопустимый формат файла. Разрешены: ' . implode(', ', $allowed));
+            }
+            
+            if ($file->getSize() > 10 * 1024 * 1024) {
+                return back()->with('error', 'Файл слишком большой. Максимум 10 МБ.');
+            }
+            
+            $fileName = $file->getClientOriginalName();
+            $filePath = $file->store('uploads', 'public');
+            
+            try {
+                $parser = new DocumentParser();
+                $fileText = $parser->extract(storage_path('app/public/' . $filePath));
+            } catch (\Throwable $e) {
+                Log::warning('File parsing failed', ['file' => $fileName, 'error' => $e->getMessage()]);
+                $fileText = '';
+            }
+        }
+
+        // Формируем сообщение для AI (с текстом файла, если прикреплён)
+        $messageForAI = $content;
+        if ($fileText) {
+            $messageForAI = "[Прикреплён документ: $fileName]\n\n--- Содержимое документа ---\n$fileText\n\n--- Вопрос пользователя ---\n$content";
+        }
+
+        // === ПАМЯТЬ МЕЖДУ ЧАТАМИ: подтягиваем контекст предыдущих консультаций ===
+        try {
+            if (!$isGuest) {
+                $query = Chat::where('user_id', Auth::id())
+                    ->where('id', '!=', $chat->id)
+                    ->whereNotNull('summary');
+                
+                $previousChats = $query->orderByDesc('updated_at')->limit(5)->get();
+
+                if ($previousChats->isNotEmpty()) {
+                    $categoryIcons = [
+                        'labor' => '⚖️', 'family' => '👨‍👩‍👧', 'housing' => '🏠',
+                        'consumer' => '📝', 'traffic' => '🚗', 'court' => '🏛️', 'other' => '💼',
+                    ];
+                    
+                    $contextLines = [];
+                    foreach ($previousChats as $pc) {
+                        $icon = $categoryIcons[$pc->category] ?? '💼';
+                        $age = $pc->updated_at->diffForHumans();
+                        $contextLines[] = "- {$icon} {$pc->summary} ({$age})";
+                    }
+                    
+                    $contextBlock = "\n\n--- Контекст предыдущих консультаций клиента ---\n"
+                        . implode("\n", $contextLines)
+                        . "\n--- Конец контекста ---\n";
+                    
+                    $messageForAI = $contextBlock . $messageForAI;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Memory context failed', ['chat' => $chat->id, 'error' => $e->getMessage()]);
+        }
+
         Message::create([
             'chat_id' => $chat->id,
             'role' => 'user',
             'content' => $content,
+            'file_name' => $fileName,
+            'file_path' => $filePath,
         ]);
 
-        if ($isGuest) {
-            $messagesUsed = session('guest_messages_used', 0);
-            session(['guest_messages_used' => $messagesUsed + 1]);
-        } else {
+        if (!$isGuest) {
             Auth::user()->incrementFreeMessagesUsed();
         }
 
@@ -147,7 +223,7 @@ class ChatController extends Controller
 
         try {
             $aiService = new TimewebAIService();
-            $aiResponse = $aiService->chat($content, $history);
+            $aiResponse = $aiService->chat($messageForAI, $history);
         } catch (\Throwable $e) {
             Log::error('Timeweb AI error: ' . $e->getMessage());
             $aiResponse = 'Извините, сервис временно перегружен. Пожалуйста, попробуйте ещё раз через минуту.';
@@ -158,6 +234,64 @@ class ChatController extends Controller
             'role' => 'assistant',
             'content' => $aiResponse,
         ]);
+
+        // === ПОКАЗ РЕКЛАМЫ ===
+        try {
+            $userMsgCount = Message::where('chat_id', $chat->id)->where('role', 'user')->count();
+            // Показываем рекламу каждые 3 сообщения пользователя (3, 6, 9...)
+            if ($userMsgCount > 0 && $userMsgCount % 3 === 0) {
+                $ad = Ad::where('active', true)->inRandomOrder()->first();
+                if ($ad) {
+                    $adContent = $ad->content;
+                    if ($ad->cta_text && $ad->cta_url) {
+                        $adContent .= '<div class="mt-3"><a href="' . e($ad->cta_url) . '" class="inline-block px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition">' . e($ad->cta_text) . '</a></div>';
+                    }
+                    Message::create([
+                        'chat_id' => $chat->id,
+                        'role' => 'assistant',
+                        'content' => $adContent,
+                        'is_ad' => true,
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Ad display failed', ['chat' => $chat->id, 'error' => $e->getMessage()]);
+        }
+
+        // === АВТОКАТЕГОРИЗАЦИЯ: один раз на чат после первого ответа ===
+        try {
+            $messagesCount = Message::where('chat_id', $chat->id)->count();
+            if ($messagesCount === 2 && empty($chat->category)) {
+                $categorizePrompt = "Проанализируй диалог юриста с клиентом и определи:
+1. Категорию права (одно из: labor/family/housing/consumer/traffic/court/other)
+2. Краткое описание сути консультации (до 80 символов, на русском языке)
+
+Ответь СТРОГО в формате JSON без markdown:
+{\"category\": \"category_key\", \"summary\": \"краткое описание\"}
+
+Диалог:
+Клиент: {$content}
+Юрист: {$aiResponse}";
+
+                try {
+                    $categorizeService = new TimewebAIService();
+                    $response = trim($categorizeService->chat($categorizePrompt));
+                    $response = preg_replace('/^```json\s*|```\s*$/', '', $response);
+                    $decoded = json_decode($response, true);
+                    if (is_array($decoded) && isset($decoded['category'])) {
+                        $chat->update([
+                            'category' => $decoded['category'],
+                            'summary' => $decoded['summary'] ?? null,
+                        ]);
+                        Log::info('Chat categorized', ['chat' => $chat->id, 'category' => $decoded['category']]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Categorization failed', ['chat' => $chat->id, 'error' => $e->getMessage()]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Categorization outer error', ['chat' => $chat->id, 'error' => $e->getMessage()]);
+        }
 
         return redirect()->route('chat.show', ['chat_id' => $chat->id]);
     }
@@ -174,7 +308,9 @@ class ChatController extends Controller
         $isGuest = !Auth::check();
 
         if ($isGuest) {
-            $messagesUsed = session('guest_messages_used', 0);
+            $messagesUsed = Message::whereHas('chat', function ($q) use ($guestId) {
+                $q->where('guest_id', $guestId)->whereNull('user_id');
+            })->where('role', 'user')->count();
             if ($messagesUsed >= self::FREE_LIMIT) {
                 return response()->json(['error' => 'Лимит исчерпан'], 403);
             }
@@ -204,16 +340,84 @@ class ChatController extends Controller
             ]);
         }
 
+        // === ОБРАБОТКА ЗАГРУЖЕННОГО ФАЙЛА ===
+        $fileName = null;
+        $filePath = null;
+        $fileText = '';
+        
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $allowed = DocumentParser::ALLOWED_EXT;
+            
+            if (!in_array($ext, $allowed)) {
+                return response()->json(['error' => 'Недопустимый формат файла'], 400);
+            }
+            
+            if ($file->getSize() > 10 * 1024 * 1024) {
+                return response()->json(['error' => 'Файл слишком большой. Максимум 10 МБ.'], 400);
+            }
+            
+            $fileName = $file->getClientOriginalName();
+            $filePath = $file->store('uploads', 'public');
+            
+            try {
+                $parser = new DocumentParser();
+                $fileText = $parser->extract(storage_path('app/public/' . $filePath));
+            } catch (\Throwable $e) {
+                Log::warning('File parsing failed', ['file' => $fileName, 'error' => $e->getMessage()]);
+                $fileText = '';
+            }
+        }
+
+        // Формируем сообщение для AI (с текстом файла, если прикреплён)
+        $messageForAI = $content;
+        if ($fileText) {
+            $messageForAI = "[Прикреплён документ: $fileName]\n\n--- Содержимое документа ---\n$fileText\n\n--- Вопрос пользователя ---\n$content";
+        }
+
+        // === ПАМЯТЬ МЕЖДУ ЧАТАМИ: подтягиваем контекст предыдущих консультаций ===
+        try {
+            if (!$isGuest) {
+                $query = Chat::where('user_id', Auth::id())
+                    ->where('id', '!=', $chat->id)
+                    ->whereNotNull('summary');
+                
+                $previousChats = $query->orderByDesc('updated_at')->limit(5)->get();
+
+                if ($previousChats->isNotEmpty()) {
+                    $categoryIcons = [
+                        'labor' => '⚖️', 'family' => '👨‍👩‍👧', 'housing' => '🏠',
+                        'consumer' => '📝', 'traffic' => '🚗', 'court' => '🏛️', 'other' => '💼',
+                    ];
+                    
+                    $contextLines = [];
+                    foreach ($previousChats as $pc) {
+                        $icon = $categoryIcons[$pc->category] ?? '💼';
+                        $age = $pc->updated_at->diffForHumans();
+                        $contextLines[] = "- {$icon} {$pc->summary} ({$age})";
+                    }
+                    
+                    $contextBlock = "\n\n--- Контекст предыдущих консультаций клиента ---\n"
+                        . implode("\n", $contextLines)
+                        . "\n--- Конец контекста ---\n";
+                    
+                    $messageForAI = $contextBlock . $messageForAI;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Memory context failed', ['chat' => $chat->id, 'error' => $e->getMessage()]);
+        }
+
         Message::create([
             'chat_id' => $chat->id,
             'role' => 'user',
             'content' => $content,
+            'file_name' => $fileName,
+            'file_path' => $filePath,
         ]);
 
-        if ($isGuest) {
-            $messagesUsed = session('guest_messages_used', 0);
-            session(['guest_messages_used' => $messagesUsed + 1]);
-        } else {
+        if (!$isGuest) {
             Auth::user()->incrementFreeMessagesUsed();
         }
 
@@ -226,9 +430,9 @@ class ChatController extends Controller
         $aiService = new TimewebAIService();
         $fullResponse = '';
 
-        return response()->stream(function () use ($aiService, $content, $history, $chat, &$fullResponse) {
+        return response()->stream(function () use ($aiService, $messageForAI, $history, $chat, &$fullResponse, $content) {
             try {
-                foreach ($aiService->chatStream($content, $history) as $chunk) {
+                foreach ($aiService->chatStream($messageForAI, $history) as $chunk) {
                     $fullResponse .= $chunk;
                     echo "data: " . json_encode(['content' => $chunk]) . "\n\n";
                     ob_flush();
@@ -243,6 +447,65 @@ class ChatController extends Controller
                     'role' => 'assistant',
                     'content' => $fullResponse,
                 ]);
+
+                // === ПОКАЗ РЕКЛАМЫ ===
+                try {
+                    $userMsgCount = Message::where('chat_id', $chat->id)->where('role', 'user')->count();
+                    // Показываем рекламу каждые 3 сообщения пользователя (3, 6, 9...)
+                    if ($userMsgCount > 0 && $userMsgCount % 3 === 0) {
+                        $ad = Ad::where('active', true)->inRandomOrder()->first();
+                        if ($ad) {
+                            $adContent = $ad->content;
+                            if ($ad->cta_text && $ad->cta_url) {
+                                $adContent .= '<div class="mt-3"><a href="' . e($ad->cta_url) . '" class="inline-block px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition">' . e($ad->cta_text) . '</a></div>';
+                            }
+                            Message::create([
+                                'chat_id' => $chat->id,
+                                'role' => 'assistant',
+                                'content' => $adContent,
+                                'is_ad' => true,
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Ad display failed', ['chat' => $chat->id, 'error' => $e->getMessage()]);
+                }
+
+                // === АВТОКАТЕГОРИЗАЦИЯ: один раз на чат после первого ответа ===
+                try {
+                    $freshChat = Chat::find($chat->id);
+                    $messagesCount = Message::where('chat_id', $chat->id)->count();
+                    if ($messagesCount === 2 && empty($freshChat->category)) {
+                        $categorizePrompt = "Проанализируй диалог юриста с клиентом и определи:
+1. Категорию права (одно из: labor/family/housing/consumer/traffic/court/other)
+2. Краткое описание сути консультации (до 80 символов, на русском языке)
+
+Ответь СТРОГО в формате JSON без markdown:
+{\"category\": \"category_key\", \"summary\": \"краткое описание\"}
+
+Диалог:
+Клиент: {$content}
+Юрист: {$fullResponse}";
+
+                        try {
+                            $categorizeService = new TimewebAIService();
+                            $response = trim($categorizeService->chat($categorizePrompt));
+                            $response = preg_replace('/^```json\s*|```\s*$/', '', $response);
+                            $decoded = json_decode($response, true);
+                            if (is_array($decoded) && isset($decoded['category'])) {
+                                $freshChat->update([
+                                    'category' => $decoded['category'],
+                                    'summary' => $decoded['summary'] ?? null,
+                                ]);
+                                Log::info('Chat categorized', ['chat' => $chat->id, 'category' => $decoded['category']]);
+                            }
+                        } catch (\Throwable $e) {
+                            Log::warning('Categorization failed', ['chat' => $chat->id, 'error' => $e->getMessage()]);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Categorization outer error', ['chat' => $chat->id, 'error' => $e->getMessage()]);
+                }
             } catch (\Throwable $e) {
                 Log::error('Stream error: ' . $e->getMessage());
                 echo "data: " . json_encode(['error' => 'Ошибка сервиса']) . "\n\n";
@@ -304,13 +567,33 @@ class ChatController extends Controller
         $isGuest = !Auth::check();
 
         if ($isGuest) {
-            $messagesUsed = session('guest_messages_used', 0);
+            // Считаем фактическое количество сообщений гостя по БД
+            $messagesUsed = \App\Models\Message::whereHas('chat', function ($q) use ($guestId) {
+                $q->where('guest_id', $guestId)->whereNull('user_id');
+            })->where('role', 'user')->count();
             if ($messagesUsed >= self::FREE_LIMIT) {
                 return redirect()->route('pricing')
                     ->with('error', 'Бесплатный лимит исчерпан. Зарегистрируйтесь, чтобы продолжить.');
             }
         }
 
+        // Ищем существующий пустой чат (без сообщений)
+        $emptyChat = Chat::whereDoesntHave('messages')
+            ->where(function ($q) use ($isGuest, $guestId) {
+                if ($isGuest) {
+                    $q->where('guest_id', $guestId)->whereNull('user_id');
+                } else {
+                    $q->where('user_id', Auth::id());
+                }
+            })
+            ->first();
+
+        if ($emptyChat) {
+            // Есть пустой чат — открываем его вместо создания нового
+            return redirect()->route('chat.show', ['chat_id' => $emptyChat->id]);
+        }
+
+        // Нет пустых чатов — создаём новый
         $chat = Chat::create([
             'user_id' => $isGuest ? null : Auth::id(),
             'guest_id' => $isGuest ? $guestId : null,

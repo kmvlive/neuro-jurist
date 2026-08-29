@@ -7,10 +7,21 @@
 
     <title>@yield('title', config('app.name', 'Нейро-юрист'))</title>
 
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="color-scheme" content="light dark">
+
+    {!! \App\Models\Setting::get('counter_code') !!}
+
     <script>
         (function() {
-            const saved = localStorage.getItem('theme');
-            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            let saved = localStorage.getItem('theme');
+            if (!saved) {
+                saved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                localStorage.setItem('theme', saved);
+            }
+            if (saved === 'dark') {
                 document.documentElement.classList.add('dark');
             }
         })();
@@ -49,6 +60,10 @@
                         <span class="hidden dark:inline">☀️</span>
                     </button>
 
+                    <a href="{{ route('templates.index') }}" class="hidden sm:inline-block text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-blue-400">
+                        📄 Шаблоны
+                    </a>
+
                     @auth
                         @if(auth()->user()->isAdmin())
                             <a href="{{ route('admin.dashboard') }}" class="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-blue-400">
@@ -78,6 +93,20 @@
         </nav>
     </header>
 
+    @if(isset($subscriptionDaysLeft) && $subscriptionDaysLeft !== null)
+        @if($subscriptionDaysLeft === 0)
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p class="font-bold">⚠️ Подписка истекла</p>
+                <p class="text-sm">Продлите подписку, чтобы продолжить использовать все функции сервиса.</p>
+            </div>
+        @elseif($subscriptionDaysLeft <= 7)
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
+                <p class="font-bold">⏰ Подписка заканчивается через {{ $subscriptionDaysLeft }} {{ $subscriptionDaysLeft === 1 ? 'день' : ($subscriptionDaysLeft < 5 ? 'дня' : 'дней') }}</p>
+                <p class="text-sm">Продлите подписку, чтобы не потерять доступ к функциям сервиса.</p>
+            </div>
+        @endif
+    @endif
+
     <main class="flex-grow">
         @if(session('success'))
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
@@ -98,10 +127,22 @@
         @yield('content')
     </main>
 
-    <footer class="bg-gray-800 dark:bg-black text-white py-8 mt-auto transition-colors">
+    <footer class="bg-gray-100 dark:bg-black text-gray-800 dark:text-white py-8 mt-auto transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            @php $footerLinks = \App\Models\FooterLink::getActiveLinks(); @endphp
+            @if($footerLinks->count() > 0)
+                <nav class="mb-4 flex flex-wrap justify-center gap-x-6 gap-y-2">
+                    @foreach($footerLinks as $link)
+                        <a href="{{ $link->url }}" 
+                           {{ $link->is_external ? 'target="_blank" rel="noopener"' : '' }}
+                           class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 text-sm hover:underline">
+                            {{ $link->title }}
+                        </a>
+                    @endforeach
+                </nav>
+            @endif
             <p>&copy; {{ date('Y') }} Нейро-юрист. Все права защищены.</p>
-            <p class="text-gray-400 text-sm mt-2">AI-ассистент для юридических задач</p>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">AI-ассистент для юридических задач</p>
         </div>
     </footer>
 

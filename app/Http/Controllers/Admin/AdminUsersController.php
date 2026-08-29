@@ -13,9 +13,42 @@ class AdminUsersController extends Controller
     /**
      * Список пользователей
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(20);
+        $query = User::query();
+
+        // Поиск по имени или email
+        if ($q = $request->input('q')) {
+            $query->where(function ($qBuilder) use ($q) {
+                $qBuilder->where('name', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%");
+            });
+        }
+
+        // Фильтр по тарифу
+        if ($plan = $request->input('plan')) {
+            $query->where('subscription_plan', $plan);
+        }
+
+        // Фильтр по статусу подписки
+        if ($subscription = $request->input('subscription')) {
+            if ($subscription === 'active') {
+                $query->where('subscription_ends_at', '>', now());
+            } elseif ($subscription === 'expired') {
+                $query->whereNotNull('subscription_ends_at')
+                    ->where('subscription_ends_at', '<=', now());
+            } elseif ($subscription === 'none') {
+                $query->whereNull('subscription_ends_at');
+            }
+        }
+
+        // Фильтр по роли
+        if ($role = $request->input('role')) {
+            $query->where('role', $role);
+        }
+
+        $users = $query->latest()->paginate(20)->appends($request->query());
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -44,10 +77,24 @@ class AdminUsersController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
+            'unlimited_messages' => $request->boolean('unlimited_messages'),
         ]);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Пользователь успешно создан.');
+    }
+
+
+    /**
+     * Просмотр пользователя
+     */
+    public function show(User $user)
+    {
+        $chats = $user->chats()->latest()->limit(10)->get();
+        $payments = $user->payments()->latest()->limit(10)->get();
+        $totalMessages = \App\Models\Message::whereHas('chat', fn($q) => $q->where('user_id', $user->id))->count();
+
+        return view('admin.users.show', compact('user', 'chats', 'payments', 'totalMessages'));
     }
 
     /**
@@ -74,6 +121,7 @@ class AdminUsersController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
+            'unlimited_messages' => $request->boolean('unlimited_messages'),
         ];
 
         if ($request->filled('password')) {

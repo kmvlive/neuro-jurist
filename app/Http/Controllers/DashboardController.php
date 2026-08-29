@@ -11,6 +11,11 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        return view('dashboard');
+        $payments = \App\Models\Payment::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        return view('dashboard', compact('payments'));
     }
 }

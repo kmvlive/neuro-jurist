@@ -10,11 +10,6 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -23,54 +18,52 @@ class User extends Authenticatable
         'free_messages_used',
         'subscription_plan',
         'subscription_ends_at',
+        'unlimited_messages',
+        'last_login_at',
+        'automation_sent',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'subscription_ends_at' => 'datetime',
+        'automation_sent' => 'array',
+            'unlimited_messages' => 'boolean',
         ];
     }
 
-    /**
-     * Check if user is admin
-     */
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    /**
-     * Check if user is client
-     */
     public function isClient(): bool
     {
         return $this->role === 'client';
     }
 
     /**
-     * Check if user has active subscription
+     * Безлимитные сообщения (включено админом вручную)
      */
+    public function hasUnlimitedMessages(): bool
+    {
+        return (bool) $this->unlimited_messages;
+    }
+
     public function hasActiveSubscription(): bool
     {
         if ($this->subscription_plan === null) {
+            return false;
+        }
+
+        if ($this->subscription_plan === 'start') {
             return false;
         }
 
@@ -81,43 +74,31 @@ class User extends Authenticatable
         return $this->subscription_ends_at->isFuture();
     }
 
-    /**
-     * Check if user can send messages (has free messages or active subscription)
-     */
     public function canSendMessages(): bool
     {
-        if ($this->hasActiveSubscription()) {
+        if ($this->hasActiveSubscription() || $this->hasUnlimitedMessages()) {
             return true;
         }
 
         return $this->free_messages_used < 20;
     }
 
-    /**
-     * Get remaining free messages
-     */
     public function getRemainingFreeMessages(): int
     {
-        if ($this->hasActiveSubscription()) {
+        if ($this->hasActiveSubscription() || $this->hasUnlimitedMessages()) {
             return PHP_INT_MAX;
         }
 
         return max(0, 20 - $this->free_messages_used);
     }
 
-    /**
-     * Increment free messages used counter
-     */
     public function incrementFreeMessagesUsed(): void
     {
-        if (!$this->hasActiveSubscription() && $this->free_messages_used < 20) {
+        if (!$this->hasActiveSubscription() && !$this->hasUnlimitedMessages() && $this->free_messages_used < 20) {
             $this->increment('free_messages_used');
         }
     }
 
-    /**
-     * Chat relationship
-     */
     public function chats()
     {
         return $this->hasMany(Chat::class);
