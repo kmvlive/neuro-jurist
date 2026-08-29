@@ -317,13 +317,11 @@
                     </div>
                 @endforeach
             </div>
-            @if($quickPrompts->count() > 10)
-                <div class="mt-3 text-center">
-                    <a href="{{ route('prompts.index') }}" class="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition">
-                        Весь каталог ({{ $quickPrompts->count() }} тем) →
-                    </a>
-                </div>
-            @endif
+            <div class="mt-3 text-center">
+                <a href="{{ route('prompts.index') }}" class="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition">
+                    📚 Весь каталог консультаций ({{ $quickPrompts->count() }} тем) →
+                </a>
+            </div>
             @endif
 </div>
 
