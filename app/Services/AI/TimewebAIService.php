@@ -16,7 +16,7 @@ class TimewebAIService
         $messages = $this->buildMessages($userMessage, $history, $topic);
 
         $response = $client->chat()->create([
-            'model' => 'deepseek/deepseek-v4-flash',
+            'model' => env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash'),
             'messages' => $messages,
         ]);
 
@@ -33,7 +33,7 @@ class TimewebAIService
         $messages = $this->buildMessages($userMessage, $history, $topic);
 
         $stream = $client->chat()->createStreamed([
-            'model' => 'deepseek/deepseek-v4-flash',
+            'model' => env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash'),
             'messages' => $messages,
         ]);
 
