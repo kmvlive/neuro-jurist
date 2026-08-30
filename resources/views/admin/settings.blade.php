@@ -15,21 +15,61 @@
         </div>
     @endif
 
-    <div class="bg-white shadow rounded-lg p-6">
-        <h2 class="text-lg font-semibold mb-2">Коды счётчиков аналитики</h2>
-        <p class="text-sm text-gray-500 mb-4">
-            Вставьте полный код Яндекс Метрики (теги <code>&lt;script&gt;</code> и <code>&lt;noscript&gt;</code>).
-            Код будет автоматически добавлен на все страницы сайта.
-        </p>
-        <form method="POST" action="{{ route('admin.settings.update') }}">
-            @csrf
+    <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-6">
+        @csrf
+
+        {{-- AI Модель --}}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold mb-2 flex items-center gap-2">
+                🤖 Модель AI-ассистента
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">
+                Выберите модель для ответов в чате. Смена модели влияет на качество ответов и стоимость.
+            </p>
+            <select name="ai_model" class="w-full border border-gray-300 rounded px-3 py-2">
+                <optgroup label="DeepSeek (текущая, стабильная)">
+                    <option value="deepseek/deepseek-v4-flash" {{ $aiModel == 'deepseek/deepseek-v4-flash' ? 'selected' : '' }}>
+                        DeepSeek V4 Flash — быстрый, качественный (рекомендуется)
+                    </option>
+                    <option value="deepseek/deepseek-chat" {{ $aiModel == 'deepseek/deepseek-chat' ? 'selected' : '' }}>
+                        DeepSeek Chat — базовая модель
+                    </option>
+                </optgroup>
+                <optgroup label="Qwen (Alibaba, дешевле)">
+                    <option value="qwen/qwen-3.5-flash" {{ $aiModel == 'qwen/qwen-3.5-flash' ? 'selected' : '' }}>
+                        Qwen 3.5 Flash — быстрая и дешёвая
+                    </option>
+                    <option value="qwen/qwen-3.6-flash" {{ $aiModel == 'qwen/qwen-3.6-flash' ? 'selected' : '' }}>
+                        Qwen 3.6 Flash — новее
+                    </option>
+                    <option value="qwen/qwen-3.5-plus" {{ $aiModel == 'qwen/qwen-3.5-plus' ? 'selected' : '' }}>
+                        Qwen 3.5 Plus — баланс скорость/качество
+                    </option>
+                    <option value="qwen/qwen-3.7-max" {{ $aiModel == 'qwen/qwen-3.7-max' ? 'selected' : '' }}>
+                        Qwen 3.7 Max — максимальное качество
+                    </option>
+                </optgroup>
+            </select>
+            <p class="text-xs text-gray-500 mt-2">
+                ⚠️ Текущая рабочая модель: <code>deepseek/deepseek-v4-flash</code>. Перед сменой проверьте доступность в <a href="https://timeweb.cloud/docs/ai-agents/pricing/models" target="_blank" class="text-primary hover:underline">документации Timeweb</a>.
+            </p>
+        </div>
+
+        {{-- Коды счётчиков --}}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold mb-2">Коды счётчиков аналитики</h2>
+            <p class="text-sm text-gray-500 mb-4">
+                Вставьте полный код Яндекс Метрики (теги <code>&lt;script&gt;</code> и <code>&lt;noscript&gt;</code>).
+                Код будет автоматически добавлен на все страницы сайта.
+            </p>
             <textarea name="counter_code" rows="12"
                       class="w-full border border-gray-300 rounded px-3 py-2 font-mono text-xs"
                       placeholder="<!-- Yandex.Metrika counter --> ...">{{ $counterCode }}</textarea>
-            <button type="submit" class="mt-4 w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 font-medium">
-                Сохранить
-            </button>
-        </form>
-    </div>
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 font-medium">
+            Сохранить настройки
+        </button>
+    </form>
 </div>
 @endsection

@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use OpenAI;
+use App\Models\Setting;
 
 class TimewebAIService
 {
@@ -16,7 +17,7 @@ class TimewebAIService
         $messages = $this->buildMessages($userMessage, $history, $topic);
 
         $response = $client->chat()->create([
-            'model' => env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash'),
+            'model' => Setting::get('ai_model', env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash')),
             'messages' => $messages,
         ]);
 
@@ -33,7 +34,7 @@ class TimewebAIService
         $messages = $this->buildMessages($userMessage, $history, $topic);
 
         $stream = $client->chat()->createStreamed([
-            'model' => env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash'),
+            'model' => Setting::get('ai_model', env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash')),
             'messages' => $messages,
         ]);
 
