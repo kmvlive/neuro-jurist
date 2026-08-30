@@ -24,10 +24,10 @@
                 🤖 Модель AI-ассистента
             </h2>
             <p class="text-sm text-gray-500 mb-4">
-                Выберите модель для ответов в чате. Смена модели влияет на качество ответов и стоимость.
+                Выберите модель для ответов в чате.
             </p>
             <select name="ai_model" class="w-full border border-gray-300 rounded px-3 py-2">
-                <optgroup label="DeepSeek (текущая, стабильная)">
+                <optgroup label="DeepSeek (стабильные, проверенные)">
                     <option value="deepseek/deepseek-v4-flash" {{ $aiModel == 'deepseek/deepseek-v4-flash' ? 'selected' : '' }}>
                         DeepSeek V4 Flash — быстрый, качественный (рекомендуется)
                     </option>
@@ -35,24 +35,18 @@
                         DeepSeek Chat — базовая модель
                     </option>
                 </optgroup>
-                <optgroup label="Qwen (Alibaba, дешевле)">
-                    <option value="qwen/qwen-3.5-flash" {{ $aiModel == 'qwen/qwen-3.5-flash' ? 'selected' : '' }}>
-                        Qwen 3.5 Flash — быстрая и дешёвая
-                    </option>
-                    <option value="qwen/qwen-3.6-flash" {{ $aiModel == 'qwen/qwen-3.6-flash' ? 'selected' : '' }}>
-                        Qwen 3.6 Flash — новее
-                    </option>
-                    <option value="qwen/qwen-3.5-plus" {{ $aiModel == 'qwen/qwen-3.5-plus' ? 'selected' : '' }}>
-                        Qwen 3.5 Plus — баланс скорость/качество
-                    </option>
-                    <option value="qwen/qwen-3.7-max" {{ $aiModel == 'qwen/qwen-3.7-max' ? 'selected' : '' }}>
-                        Qwen 3.7 Max — максимальное качество
+                <optgroup label="Другие (экспериментальные)">
+                    <option value="deepseek/deepseek-r1" {{ $aiModel == 'deepseek/deepseek-r1' ? 'selected' : '' }}>
+                        DeepSeek R1 — с reasoning
                     </option>
                 </optgroup>
             </select>
-            <p class="text-xs text-gray-500 mt-2">
-                ⚠️ Текущая рабочая модель: <code>deepseek/deepseek-v4-flash</code>. Перед сменой проверьте доступность в <a href="https://timeweb.cloud/docs/ai-agents/pricing/models" target="_blank" class="text-primary hover:underline">документации Timeweb</a>.
-            </p>
+            <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                <p class="text-yellow-800">
+                    ⚠️ <strong>Важно:</strong> Qwen модели пока недоступны через API Timeweb Cloud. 
+                    Используйте проверенные модели DeepSeek для стабильной работы.
+                </p>
+            </div>
         </div>
 
         {{-- Коды счётчиков --}}
