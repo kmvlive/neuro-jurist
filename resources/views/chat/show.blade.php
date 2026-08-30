@@ -728,16 +728,32 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.value.trim() && !this.disabled) form.dispatchEvent(new Event('submit'));
         }
     });
+    let currentPromptKey = null;
     document.querySelectorAll('.quick-prompt').forEach(btn => {
         btn.addEventListener('click', function() {
             if (input && !input.disabled) {
-                const promptText = this.getAttribute('data-prompt-text') || this.textContent.trim();
-                input.value = promptText;
-                if (form && form.requestSubmit) {
-                    form.requestSubmit();
-                } else if (form) {
-                    form.dispatchEvent(new Event('submit', { cancelable: true }));
+                currentPromptKey = this.getAttribute('data-prompt-key');
+                const topic = this.textContent.trim();
+                const container = this.closest('.quick-scroll');
+                if (container) container.classList.add('hidden');
+                let chip = document.getElementById('prompt-topic-chip');
+                if (!chip) {
+                    chip = document.createElement('div');
+                    chip.id = 'prompt-topic-chip';
+                    chip.className = 'hidden items-center gap-2 text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg px-3 py-1.5 mt-2 w-fit';
+                    chip.innerHTML = '<span id="prompt-topic-text"></span><button type="button" id="prompt-topic-clear" class="text-gray-400 hover:text-red-500 font-bold ml-1" title="Сбросить тему">✕</button>';
+                    form.parentNode.insertBefore(chip, form);
+                    chip.querySelector('#prompt-topic-clear').addEventListener('click', function() {
+                        currentPromptKey = null;
+                        chip.classList.add('hidden');
+                        chip.classList.remove('flex');
+                        if (container) container.classList.remove('hidden');
+                    });
                 }
+                chip.querySelector('#prompt-topic-text').textContent = '📌 Тема: ' + topic;
+                chip.classList.remove('hidden');
+                chip.classList.add('flex');
+                input.focus();
             }
         });
     });
@@ -834,6 +850,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Создаём FormData ПЕРЕД очисткой поля
         const formData = new FormData(form);
         formData.set('message', message); // Явно устанавливаем значение
+        if (currentPromptKey) {
+            formData.append('prompt_key', currentPromptKey);
+        }
         if (attachedFile) {
             formData.append('attachment', attachedFile);
         }

@@ -173,6 +173,22 @@ class ChatController extends Controller
         }
 
 
+
+        // === КОНТЕКСТ КВИК-ПРОМТА (скрытый, не сохраняется в чат) ===
+        $promptKey = $chat->prompt_key ?? $request->input('prompt_key');
+        if ($promptKey) {
+            $quickPrompt = QuickPrompt::where('key', $promptKey)->where('active', true)->first();
+            if ($quickPrompt) {
+                $promptContext = "\n\n--- Контекст выбранной темы консультации ---\n"
+                    . "Тема: {$quickPrompt->title}\n";
+                if ($quickPrompt->text) {
+                    $promptContext .= "Инструкции для юриста: {$quickPrompt->text}\n";
+                }
+                $promptContext .= "Отвечай строго в рамках этой темы.\n"
+                    . "--- Конец контекста темы ---\n";
+                $messageForAI = $promptContext . $messageForAI;
+            }
+        }
         // === ПАМЯТЬ МЕЖДУ ЧАТАМИ: подтягиваем контекст предыдущих консультаций ===
         try {
             if (!$isGuest) {
@@ -383,6 +399,22 @@ class ChatController extends Controller
         }
 
 
+
+        // === КОНТЕКСТ КВИК-ПРОМТА (скрытый, не сохраняется в чат) ===
+        $promptKey = $chat->prompt_key ?? $request->input('prompt_key');
+        if ($promptKey) {
+            $quickPrompt = QuickPrompt::where('key', $promptKey)->where('active', true)->first();
+            if ($quickPrompt) {
+                $promptContext = "\n\n--- Контекст выбранной темы консультации ---\n"
+                    . "Тема: {$quickPrompt->title}\n";
+                if ($quickPrompt->text) {
+                    $promptContext .= "Инструкции для юриста: {$quickPrompt->text}\n";
+                }
+                $promptContext .= "Отвечай строго в рамках этой темы.\n"
+                    . "--- Конец контекста темы ---\n";
+                $messageForAI = $promptContext . $messageForAI;
+            }
+        }
         // === ПАМЯТЬ МЕЖДУ ЧАТАМИ: подтягиваем контекст предыдущих консультаций ===
         try {
             if (!$isGuest) {
