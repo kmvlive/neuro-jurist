@@ -172,19 +172,6 @@ class ChatController extends Controller
             $messageForAI = "[Прикреплён документ: $fileName]\n\n--- Содержимое документа ---\n$fileText\n\n--- Вопрос пользователя ---\n$content";
         }
 
-        // === КОНТЕКСТ КВИК-ПРОМТА ===
-        $promptKey = $chat->prompt_key ?? $request->input('prompt_key');
-        if ($promptKey) {
-            $quickPrompt = QuickPrompt::where('key', $promptKey)->where('active', true)->first();
-            if ($quickPrompt && $quickPrompt->text) {
-                $promptContext = "\n\n--- Контекст выбранной темы консультации ---\n"
-                    . "Тема: {$quickPrompt->title}\n"
-                    . "Инструкции для юриста: {$quickPrompt->text}\n"
-                    . "Отвечай строго в рамках этой темы, используя инструкции выше.\n"
-                    . "--- Конец контекста темы ---\n";
-                $messageForAI = $promptContext . $messageForAI;
-            }
-        }
 
         // === ПАМЯТЬ МЕЖДУ ЧАТАМИ: подтягиваем контекст предыдущих консультаций ===
         try {
@@ -395,19 +382,6 @@ class ChatController extends Controller
             $messageForAI = "[Прикреплён документ: $fileName]\n\n--- Содержимое документа ---\n$fileText\n\n--- Вопрос пользователя ---\n$content";
         }
 
-        // === КОНТЕКСТ КВИК-ПРОМТА ===
-        $promptKey = $chat->prompt_key ?? $request->input('prompt_key');
-        if ($promptKey) {
-            $quickPrompt = QuickPrompt::where('key', $promptKey)->where('active', true)->first();
-            if ($quickPrompt && $quickPrompt->text) {
-                $promptContext = "\n\n--- Контекст выбранной темы консультации ---\n"
-                    . "Тема: {$quickPrompt->title}\n"
-                    . "Инструкции для юриста: {$quickPrompt->text}\n"
-                    . "Отвечай строго в рамках этой темы, используя инструкции выше.\n"
-                    . "--- Конец контекста темы ---\n";
-                $messageForAI = $promptContext . $messageForAI;
-            }
-        }
 
         // === ПАМЯТЬ МЕЖДУ ЧАТАМИ: подтягиваем контекст предыдущих консультаций ===
         try {

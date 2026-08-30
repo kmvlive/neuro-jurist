@@ -28,6 +28,12 @@
         </div>
 
         <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Текст промта (инструкция для AI)</label>
+            <textarea name="text" rows="6" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Действуй как опытный юрист по авторскому праву. Пользователь - фотограф, чьи работы использовали без разрешения. Помоги составить претензию...">{{ old('text', $prompt?->text) }}</textarea>
+            <p class="text-xs text-gray-500 mt-1">Этот текст отправится как первое сообщение пользователя при клике на промпт. Оставь пустым - отправится только название темы.</p>
+        </div>
+
+        <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Разделы в каталоге (можно выбрать несколько)</label>
             <div class="border border-gray-300 rounded p-3 max-h-60 overflow-y-auto bg-gray-50 space-y-1">
                 @foreach($categories as $cat)

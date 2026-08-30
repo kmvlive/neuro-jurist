@@ -331,7 +331,7 @@
             <div class="quick-scroll flex sm:grid sm:grid-cols-2 gap-2 mt-3 overflow-x-auto sm:overflow-visible -mx-1 px-1">
                 @foreach($quickPrompts->take(10) as $p)
                     <div class="quick-prompt-wrapper flex items-center gap-1 flex-shrink-0">
-                        <button type="button" class="quick-prompt whitespace-nowrap sm:whitespace-normal text-left px-3 py-2 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg hover:bg-blue-100 dark:hover:bg-gray-600 transition text-sm flex-1" data-prompt-key="{{ $p->key }}">{{ $p->icon }} {{ $p->title }}</button>
+                        <button type="button" class="quick-prompt whitespace-nowrap sm:whitespace-normal text-left px-3 py-2 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg hover:bg-blue-100 dark:hover:bg-gray-600 transition text-sm flex-1" data-prompt-key="{{ $p->key }}" data-prompt-text="{{ e($p->text ?: $p->title) }}">{{ $p->icon }} {{ $p->title }}</button>
                         <button type="button" class="share-prompt-btn flex-shrink-0 px-2 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-xs" data-prompt-key="{{ $p->key }}" title="Скопировать ссылку">📋</button>
                     </div>
                 @endforeach
@@ -728,32 +728,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.value.trim() && !this.disabled) form.dispatchEvent(new Event('submit'));
         }
     });
-    let currentPromptKey = null;
     document.querySelectorAll('.quick-prompt').forEach(btn => {
         btn.addEventListener('click', function() {
             if (input && !input.disabled) {
-                currentPromptKey = this.getAttribute('data-prompt-key');
-                const topic = this.textContent.trim();
-                const container = this.closest('.quick-scroll');
-                if (container) container.classList.add('hidden');
-                let chip = document.getElementById('prompt-topic-chip');
-                if (!chip) {
-                    chip = document.createElement('div');
-                    chip.id = 'prompt-topic-chip';
-                    chip.className = 'hidden items-center gap-2 text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg px-3 py-1.5 mt-2 w-fit';
-                    chip.innerHTML = '<span id="prompt-topic-text"></span><button type="button" id="prompt-topic-clear" class="text-gray-400 hover:text-red-500 font-bold ml-1" title="Сбросить тему">✕</button>';
-                    form.parentNode.insertBefore(chip, form);
-                    chip.querySelector('#prompt-topic-clear').addEventListener('click', function() {
-                        currentPromptKey = null;
-                        chip.classList.add('hidden');
-                        chip.classList.remove('flex');
-                        if (container) container.classList.remove('hidden');
-                    });
+                const promptText = this.getAttribute('data-prompt-text') || this.textContent.trim();
+                input.value = promptText;
+                if (form && form.requestSubmit) {
+                    form.requestSubmit();
+                } else if (form) {
+                    form.dispatchEvent(new Event('submit', { cancelable: true }));
                 }
-                chip.querySelector('#prompt-topic-text').textContent = '📌 Тема: ' + topic;
-                chip.classList.remove('hidden');
-                chip.classList.add('flex');
-                input.focus();
             }
         });
     });
@@ -850,9 +834,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Создаём FormData ПЕРЕД очисткой поля
         const formData = new FormData(form);
         formData.set('message', message); // Явно устанавливаем значение
-        if (currentPromptKey) {
-            formData.append('prompt_key', currentPromptKey);
-        }
         if (attachedFile) {
             formData.append('attachment', attachedFile);
         }
