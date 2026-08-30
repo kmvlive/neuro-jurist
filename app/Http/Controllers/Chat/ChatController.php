@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller
 {
@@ -659,7 +660,14 @@ class ChatController extends Controller
             }
         }
 
-        $chat->delete();
+        // Удаляем прикреплённые файлы из хранилища
+        foreach ($chat->messages()->whereNotNull('file_path')->get() as $m) {
+            if ($m->file_path && Storage::disk('public')->exists($m->file_path)) {
+                Storage::disk('public')->delete($m->file_path);
+            }
+        }
+
+        $chat->delete(); // сообщения удалятся каскадно (FK cascade)
 
         return redirect()->route('chat.show')
             ->with('success', 'Чат удалён.');
