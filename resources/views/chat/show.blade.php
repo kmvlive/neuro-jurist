@@ -237,6 +237,8 @@
                                     <button type="button" class="copy-btn text-xs opacity-70 hover:opacity-100 text-white" data-raw="{{ e($msg->content) }}" title="Копировать">📋</button>
                                 </div>
                             @endif
+                        </div>
+                    </div>
                 @endforeach
             @else
                 <div class="flex justify-start">
@@ -925,4 +927,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+        </div>
+    </div>
 @endsection
