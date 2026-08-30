@@ -269,7 +269,7 @@
                     id="message-input"
                     class="flex-1 min-w-0 border border-gray-300 dark:border-gray-600 rounded-lg px-3 sm:px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:text-gray-100 resize-none text-base"
                     placeholder="Задайте вопрос..."
-                    rows="1"
+                    rows="2"
                     @if(!$canSend) disabled @endif
                 ></textarea>
                 <input type="file" id="file-input" accept=".pdf,.docx,.txt,.doc" class="hidden" />
