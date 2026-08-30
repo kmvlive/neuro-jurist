@@ -224,12 +224,26 @@
                                 </div>
                             @else
                                 @if($msg->file_name)
-                                    <div class="mb-2 flex items-center gap-2 bg-blue-600 bg-opacity-30 rounded px-2 py-1.5 text-xs">
-                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    @php
+                                        $ext = strtolower(pathinfo($msg->file_name, PATHINFO_EXTENSION));
+                                        $fm = [
+                                            'pdf'  => ['📕', 'PDF',  'red'],
+                                            'doc'  => ['📘', 'DOC',  'blue'],
+                                            'docx' => ['📘', 'DOCX', 'blue'],
+                                            'txt'  => ['📄', 'TXT',  'gray'],
+                                        ][$ext] ?? ['📄', strtoupper($ext), 'gray'];
+                                    @endphp
+                                    <a href="/storage/{{ $msg->file_path }}" target="_blank"
+                                       class="mb-2 flex items-center gap-3 rounded-lg border px-3 py-2 transition {{ $fm[2] === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40' : ($fm[2] === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40' : 'bg-gray-100 dark:bg-gray-600/50 border-gray-200 dark:border-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600') }}">
+                                        <span class="text-2xl flex-shrink-0">{{ $fm[0] }}</span>
+                                        <span class="flex-1 min-w-0">
+                                            <span class="block text-xs font-medium truncate">{{ $msg->file_name }}</span>
+                                            <span class="block text-[10px] opacity-70">{{ $fm[1] }}@if($msg->file_size) · {{ $msg->file_size >= 1048576 ? round($msg->file_size / 1048576, 1) . ' МБ' : round($msg->file_size / 1024) . ' КБ' }}@endif</span>
+                                        </span>
+                                        <svg class="w-4 h-4 opacity-50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                         </svg>
-                                        <a href="/storage/{{ $msg->file_path }}" target="_blank" class="underline hover:no-underline truncate">{{ $msg->file_name }}</a>
-                                    </div>
+                                    </a>
                                 @endif
                                 <p class="text-sm whitespace-pre-wrap">{{ $msg->content }}</p>
                                 <div class="flex items-center gap-2 mt-1">
@@ -250,16 +264,19 @@
         </div>
 
         <div class="border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
-            <div id="file-preview" class="hidden mb-2 flex items-center gap-2 bg-blue-50 dark:bg-gray-700 rounded-lg px-3 py-2 text-sm">
-                <svg class="w-5 h-5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <span id="file-name" class="truncate flex-1 text-gray-800 dark:text-gray-200"></span>
-                <button type="button" id="file-remove" class="text-red-500 hover:text-red-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+            <div id="file-preview" class="hidden mb-2">
+                <div class="flex items-center gap-3 rounded-lg border border-blue-200 dark:border-gray-600 bg-blue-50 dark:bg-gray-700 px-3 py-2">
+                    <span id="file-icon" class="text-2xl flex-shrink-0">📄</span>
+                    <span class="flex-1 min-w-0">
+                        <span id="file-name" class="block text-sm font-medium truncate text-gray-800 dark:text-gray-200"></span>
+                        <span id="file-size" class="block text-xs text-gray-500 dark:text-gray-400"></span>
+                    </span>
+                    <button type="button" id="file-remove" class="text-red-500 hover:text-red-700 flex-shrink-0 p-1" title="Убрать файл">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             <form method="POST" action="{{ route('chat.stream') }}" class="flex gap-2" id="chat-form" enctype="multipart/form-data">
                 @csrf
@@ -797,7 +814,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             attachedFile = f;
-            fileNameEl.textContent = f.name + ' (' + (f.size / 1024).toFixed(0) + ' КБ)';
+            const fileIcons = { pdf: '📕', doc: '📘', docx: '📘', txt: '📄' };
+            const iconEl = document.getElementById('file-icon');
+            const sizeEl = document.getElementById('file-size');
+            if (iconEl) iconEl.textContent = fileIcons[ext] || '📄';
+            fileNameEl.textContent = f.name;
+            if (sizeEl) sizeEl.textContent = ext.toUpperCase() + ' · ' + (f.size >= 1048576 ? (f.size / 1048576).toFixed(1) + ' МБ' : Math.round(f.size / 1024) + ' КБ');
             filePreview.classList.remove('hidden');
         }
     });

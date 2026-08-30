@@ -154,6 +154,7 @@ class ChatController extends Controller
             
             $fileName = $file->getClientOriginalName();
             $filePath = $file->store('uploads', 'public');
+            $fileSize = $file->getSize();
             
             try {
                 $parser = new DocumentParser();
@@ -209,6 +210,7 @@ class ChatController extends Controller
             'content' => $content,
             'file_name' => $fileName,
             'file_path' => $filePath,
+            'file_size' => $fileSize ?? null,
         ]);
 
         if (!$isGuest) {
@@ -360,6 +362,7 @@ class ChatController extends Controller
             
             $fileName = $file->getClientOriginalName();
             $filePath = $file->store('uploads', 'public');
+            $fileSize = $file->getSize();
             
             try {
                 $parser = new DocumentParser();
@@ -415,6 +418,7 @@ class ChatController extends Controller
             'content' => $content,
             'file_name' => $fileName,
             'file_path' => $filePath,
+            'file_size' => $fileSize ?? null,
         ]);
 
         if (!$isGuest) {

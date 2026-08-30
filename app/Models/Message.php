@@ -13,6 +13,7 @@ class Message extends Model
         'content',
         'file_name',
         'file_path',
+        'file_size',
         'is_ad'
     ];
 
