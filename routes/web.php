@@ -30,6 +30,7 @@ Route::post('/templates/{key}/generate', [\App\Http\Controllers\TemplateControll
 
 // Каталог промтов
 Route::get("/prompts", [PromptCatalogController::class, "index"])->name("prompts.index");
+Route::get("/prompts/{slug}", [PromptCatalogController::class, "show"])->name("prompts.show");
 
 Route::get('/pricing', [PricingController::class, 'show'])->name('pricing');
 Route::post('/pricing/{plan}', [PricingController::class, 'select'])->name('pricing.select');
