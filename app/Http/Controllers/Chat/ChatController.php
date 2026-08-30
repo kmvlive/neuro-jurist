@@ -86,7 +86,7 @@ class ChatController extends Controller
             'canSend' => $canSend,
             'remainingMessages' => $remainingMessages,
             'freeLimit' => self::FREE_LIMIT,
-            'quickPrompts' => QuickPrompt::where('active', true)->orderBy('sort_order')->get(),
+            'quickPrompts' => QuickPrompt::getForChat(),
         ]);
     }
 

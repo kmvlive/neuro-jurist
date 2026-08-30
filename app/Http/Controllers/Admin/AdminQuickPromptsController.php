@@ -12,7 +12,7 @@ class AdminQuickPromptsController extends Controller
 {
     public function index()
     {
-        $prompts = QuickPrompt::with('category')->orderBy('sort_order')->get();
+        $prompts = QuickPrompt::with('categories')->orderBy('sort_order')->get();
         return view('admin.quick-prompts.index', compact('prompts'));
     }
 
@@ -28,12 +28,16 @@ class AdminQuickPromptsController extends Controller
             'title' => 'required|string|max:255',
             'key' => 'required|string|max:50|unique:quick_prompts,key|regex:/^[a-z0-9_]+$/',
             'icon' => 'required|string|max:10',
-            'active' => 'boolean',
+            'active' => 'in:0,1',
+            'show_in_chat' => 'in:0,1',
             'sort_order' => 'integer',
-            'category_id' => 'nullable|exists:prompt_categories,id',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:prompt_categories,id',
         ]);
-        if ($request->category_id === '' || $request->category_id === '0') $data['category_id'] = null;
-        QuickPrompt::create($data);
+        $categories = $data['categories'] ?? [];
+        unset($data['categories']);
+        $prompt = QuickPrompt::create($data);
+        $prompt->categories()->sync($categories);
         return redirect()->route('admin.quick-prompts.index')->with('success', 'Промпт создан');
     }
 
@@ -49,12 +53,16 @@ class AdminQuickPromptsController extends Controller
             'title' => 'required|string|max:255',
             'key' => 'required|string|max:50|unique:quick_prompts,key,' . $quickPrompt->id . '|regex:/^[a-z0-9_]+$/',
             'icon' => 'required|string|max:10',
-            'active' => 'boolean',
+            'active' => 'in:0,1',
+            'show_in_chat' => 'in:0,1',
             'sort_order' => 'integer',
-            'category_id' => 'nullable|exists:prompt_categories,id',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:prompt_categories,id',
         ]);
-        if ($request->category_id === '' || $request->category_id === '0') $data['category_id'] = null;
+        $categories = $data['categories'] ?? [];
+        unset($data['categories']);
         $quickPrompt->update($data);
+        $quickPrompt->categories()->sync($categories);
         return redirect()->route('admin.quick-prompts.index')->with('success', 'Промпт обновлён');
     }
 

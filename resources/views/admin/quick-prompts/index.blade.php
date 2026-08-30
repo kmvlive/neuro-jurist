@@ -39,15 +39,22 @@
                             <span class="text-2xl">{{ $p->icon }}</span>
                             <span class="font-semibold text-gray-900">{{ $p->title }}</span>
                             <span class="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{{ $p->key }}</span>
-                            @if($p->category)
-                                <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
-                                    {{ $p->category->icon }} {{ $p->category->parent ? $p->category->parent->name . ' → ' : '' }}{{ $p->category->name }}
-                                </span>
+                            @if($p->categories->count() > 0)
+                                @foreach($p->categories as $cat)
+                                    <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
+                                        {{ $cat->icon }} {{ $cat->parent ? $cat->parent->name . ' → ' : '' }}{{ $cat->name }}
+                                    </span>
+                                @endforeach
                             @else
                                 <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">Без категории</span>
                             @endif
                             @if(!$p->active)
                                 <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Неактивен</span>
+                            @endif
+                            @if(!$p->show_in_chat)
+                                <span class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">🔒 Только в каталоге</span>
+                            @else
+                                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">💬 В чате</span>
                             @endif
                         </div>
                         <div class="text-sm mb-2">

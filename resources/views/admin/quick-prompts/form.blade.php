@@ -28,15 +28,19 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Категория в каталоге</label>
-            <select name="category_id" class="w-full border border-gray-300 rounded px-3 py-2">
-                <option value="">— Без категории —</option>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Разделы в каталоге (можно выбрать несколько)</label>
+            <div class="border border-gray-300 rounded p-3 max-h-60 overflow-y-auto bg-gray-50 space-y-1">
                 @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}" @selected(old('category_id', $prompt?->category_id) == $cat->id)>
-                        {{ $cat->parent ? '    └─ ' : '' }}{{ $cat->icon }} {{ $cat->name }}
-                    </option>
+                    <label class="flex items-center gap-2 py-1 px-2 hover:bg-white rounded cursor-pointer">
+                        <input type="checkbox" name="categories[]" value="{{ $cat->id }}" 
+                            @checked(in_array($cat->id, old('categories', $prompt ? $prompt->categories->pluck('id')->toArray() : [])))
+                            class="rounded">
+                        <span>
+                            {{ $cat->parent ? '└─ ' : '' }}{{ $cat->icon }} {{ $cat->name }}
+                        </span>
+                    </label>
                 @endforeach
-            </select>
+            </div>
             <p class="text-xs text-gray-500 mt-1">
                 Управление разделами: <a href="{{ route('admin.prompt-categories.index') }}" class="text-primary hover:underline">Категории промтов →</a>
             </p>
@@ -51,6 +55,12 @@
             <input type="hidden" name="active" value="0">
             <input type="checkbox" name="active" value="1" {{ old('active', $prompt?->active ?? true) ? 'checked' : '' }} class="rounded">
             <span class="text-sm font-medium text-gray-700">Активен</span>
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="hidden" name="show_in_chat" value="0">
+            <input type="checkbox" name="show_in_chat" value="1" {{ old('show_in_chat', $prompt?->show_in_chat ?? true) ? 'checked' : '' }} class="rounded">
+            <span class="text-sm font-medium text-gray-700">Показывать в чате (на главной)</span>
         </label>
 
         <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 font-medium">Сохранить</button>

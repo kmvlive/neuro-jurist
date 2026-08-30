@@ -6,11 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class QuickPrompt extends Model
 {
-    protected $fillable = ['category_id', 'title', 'key', 'icon', 'text', 'active', 'sort_order'];
+    protected $fillable = ['title', 'key', 'icon', 'text', 'active', 'show_in_chat', 'sort_order'];
 
-    public function category()
+    protected $casts = [
+        'active' => 'boolean',
+        'show_in_chat' => 'boolean',
+    ];
+
+    public function categories()
     {
-        return $this->belongsTo(PromptCategory::class);
+        return $this->belongsToMany(PromptCategory::class, 'prompt_category_quick_prompt');
     }
 
     public function ad()
@@ -21,5 +26,13 @@ class QuickPrompt extends Model
     public static function getActive()
     {
         return self::where('active', true)->orderBy('sort_order')->get();
+    }
+
+    public static function getForChat()
+    {
+        return self::where('active', true)
+            ->where('show_in_chat', true)
+            ->orderBy('sort_order')
+            ->get();
     }
 }

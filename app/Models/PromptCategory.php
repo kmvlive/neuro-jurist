@@ -22,7 +22,7 @@ class PromptCategory extends Model
 
     public function quickPrompts()
     {
-        return $this->hasMany(QuickPrompt::class, 'category_id');
+        return $this->belongsToMany(QuickPrompt::class, 'prompt_category_quick_prompt');
     }
 
     public static function sections()
