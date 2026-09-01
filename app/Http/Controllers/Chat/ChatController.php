@@ -48,7 +48,8 @@ class ChatController extends Controller
         }
 
         // Если чат не выбран — берём последний активный чат пользователя/гостя
-        if (!$currentChat) {
+        // ИСКЛЮЧЕНИЕ: переход из каталога с ?prompt=KEY — всегда начинаем с НОВОГО чата
+        if (!$currentChat && !$request->filled('prompt')) {
             if ($isGuest) {
                 $currentChat = Chat::where('guest_id', $guestId)
                     ->whereNull('user_id')
