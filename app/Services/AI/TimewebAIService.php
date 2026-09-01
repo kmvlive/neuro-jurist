@@ -10,10 +10,10 @@ class TimewebAIService
     /** Метрики последнего запроса: модель, токены, время */
     public ?array $lastUsage = null;
 
-    public function chat(string $userMessage, array $history = [], ?string $topic = null): string
+    public function chat(string $userMessage, array $history = [], ?string $topic = null, ?string $instructions = null): string
     {
         $client = $this->makeClient();
-        $messages = $this->buildMessages($userMessage, $history, $topic);
+        $messages = $this->buildMessages($userMessage, $history, $topic, $instructions);
         [$model, $params] = $this->buildParams($messages);
 
         $start = microtime(true);
@@ -31,10 +31,10 @@ class TimewebAIService
         return $response->choices[0]->message->content;
     }
 
-    public function chatStream(string $userMessage, array $history = [], ?string $topic = null): \Generator
+    public function chatStream(string $userMessage, array $history = [], ?string $topic = null, ?string $instructions = null): \Generator
     {
         $client = $this->makeClient();
-        $messages = $this->buildMessages($userMessage, $history, $topic);
+        $messages = $this->buildMessages($userMessage, $history, $topic, $instructions);
         [$model, $params] = $this->buildParams($messages);
         // Просим провайдера вернуть usage в финальном чанке стрима
         $params['stream_options'] = ['include_usage' => true];
@@ -94,12 +94,16 @@ class TimewebAIService
         }
         return [$model, $params];
     }
-    private function buildMessages(string $userMessage, array $history, ?string $topic): array
+    private function buildMessages(string $userMessage, array $history, ?string $topic, ?string $instructions = null): array
     {
         $systemPrompt = 'Ты — «Нейро-юрист», профессиональный AI-ассистент по праву Российской Федерации. Отвечай понятно, структурированно и кратко. Ссылайся на законы и статьи, когда это уместно. Не выдумывай нормы права. В сложных случаях рекомендуй обратиться к живому юристу.';
 
         if ($topic) {
             $systemPrompt .= "\n\nВажный контекст: клиент обратился по теме «{$topic}». Отвечай строго в рамках этой темы, учитывай специфику. Если вопрос клиента выходит за рамки темы — мягко верни его к теме или кратко ответь, но напомни, что изначально обсуждается «{$topic}».";
+        }
+
+        if ($instructions) {
+            $systemPrompt .= "\n\n" . $instructions;
         }
 
         $messages = [

@@ -177,19 +177,14 @@ class ChatController extends Controller
 
 
 
-        // === КОНТЕКСТ КВИК-ПРОМТА (скрытый, не сохраняется в чат) ===
+        // === КОНТЕКСТ КВИК-ПРОМТА (передаётся в системный промт) ===
         $promptKey = $chat->prompt_key ?? $request->input('prompt_key');
+        $promptInstructions = null;
         if ($promptKey) {
             $quickPrompt = QuickPrompt::where('key', $promptKey)->where('active', true)->first();
             if ($quickPrompt) {
-                $promptContext = "\n\n--- Контекст выбранной темы консультации ---\n"
-                    . "Тема: {$quickPrompt->title}\n";
-                if ($quickPrompt->text) {
-                    $promptContext .= "Инструкции для юриста: {$quickPrompt->text}\n";
-                }
-                $promptContext .= "Отвечай строго в рамках этой темы.\n"
-                    . "--- Конец контекста темы ---\n";
-                $messageForAI = $promptContext . $messageForAI;
+                $promptInstructions = "ТЕМА КОНСУЛЬТАЦИИ: «{$quickPrompt->title}».\n\n"
+                    . ($quickPrompt->text ? $quickPrompt->text : '');
             }
         }
         // === ПАМЯТЬ МЕЖДУ ЧАТАМИ: подтягиваем контекст предыдущих консультаций ===
@@ -246,7 +241,7 @@ class ChatController extends Controller
 
         try {
             $aiService = new TimewebAIService();
-            $aiResponse = $aiService->chat($messageForAI, $history);
+            $aiResponse = $aiService->chat($messageForAI, $history, null, $promptInstructions);
             $this->logAiUsage($aiService, $chat->id, 'chat');
         } catch (\Throwable $e) {
             Log::error('Timeweb AI error: ' . $e->getMessage());
@@ -405,19 +400,14 @@ class ChatController extends Controller
 
 
 
-        // === КОНТЕКСТ КВИК-ПРОМТА (скрытый, не сохраняется в чат) ===
+        // === КОНТЕКСТ КВИК-ПРОМТА (передаётся в системный промт) ===
         $promptKey = $chat->prompt_key ?? $request->input('prompt_key');
+        $promptInstructions = null;
         if ($promptKey) {
             $quickPrompt = QuickPrompt::where('key', $promptKey)->where('active', true)->first();
             if ($quickPrompt) {
-                $promptContext = "\n\n--- Контекст выбранной темы консультации ---\n"
-                    . "Тема: {$quickPrompt->title}\n";
-                if ($quickPrompt->text) {
-                    $promptContext .= "Инструкции для юриста: {$quickPrompt->text}\n";
-                }
-                $promptContext .= "Отвечай строго в рамках этой темы.\n"
-                    . "--- Конец контекста темы ---\n";
-                $messageForAI = $promptContext . $messageForAI;
+                $promptInstructions = "ТЕМА КОНСУЛЬТАЦИИ: «{$quickPrompt->title}».\n\n"
+                    . ($quickPrompt->text ? $quickPrompt->text : '');
             }
         }
         // === ПАМЯТЬ МЕЖДУ ЧАТАМИ: подтягиваем контекст предыдущих консультаций ===
@@ -476,9 +466,9 @@ class ChatController extends Controller
         $fullResponse = '';
 
         $controller = $this;
-        return response()->stream(function () use ($aiService, $messageForAI, $history, $chat, &$fullResponse, $content, $controller) {
+        return response()->stream(function () use ($aiService, $messageForAI, $history, $chat, &$fullResponse, $content, $controller, $promptInstructions) {
             try {
-                foreach ($aiService->chatStream($messageForAI, $history) as $chunk) {
+                foreach ($aiService->chatStream($messageForAI, $history, null, $promptInstructions) as $chunk) {
                     $fullResponse .= $chunk;
                     echo "data: " . json_encode(['content' => $chunk]) . "\n\n";
                     ob_flush();
