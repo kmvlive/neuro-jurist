@@ -16,10 +16,16 @@ class TimewebAIService
 
         $messages = $this->buildMessages($userMessage, $history, $topic);
 
-        $response = $client->chat()->create([
-            'model' => Setting::get('ai_model', env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash')),
+        $model = Setting::get('ai_model', env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash'));
+        $params = [
+            'model' => $model,
             'messages' => $messages,
-        ]);
+        ];
+        if (preg_match('/^dashscope\/qwen3/i', $model)) {
+            $params['enable_thinking'] = false;
+        }
+        
+        $response = $client->chat()->create($params);
 
         return $response->choices[0]->message->content;
     }
@@ -33,10 +39,19 @@ class TimewebAIService
 
         $messages = $this->buildMessages($userMessage, $history, $topic);
 
-        $stream = $client->chat()->createStreamed([
-            'model' => Setting::get('ai_model', env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash')),
+        $model = Setting::get('ai_model', env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash'));
+        
+        // Для Qwen3+ отключаем режим "размышлений" (он занимает 15-20 секунд)
+        // Поддерживают параметр enable_thinking: Qwen 3, 3.5, 3.6, 3.7
+        $params = [
+            'model' => $model,
             'messages' => $messages,
-        ]);
+        ];
+        if (preg_match('/^dashscope\/qwen3/i', $model)) {
+            $params['enable_thinking'] = false;
+        }
+        
+        $stream = $client->chat()->createStreamed($params);
 
         foreach ($stream as $response) {
             $content = $response->choices[0]->delta->content ?? '';

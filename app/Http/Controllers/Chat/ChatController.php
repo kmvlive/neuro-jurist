@@ -483,11 +483,28 @@ class ChatController extends Controller
                 ob_flush();
                 flush();
 
+                // Сохраняем ответ ассистента
                 Message::create([
                     'chat_id' => $chat->id,
                     'role' => 'assistant',
                     'content' => $fullResponse,
                 ]);
+
+                // === ВАЖНО: закрываем HTTP-соединение с клиентом ===
+                // Теперь пользователь сразу получит ответ, а фоновые задачи (реклама,
+                // категоризация) выполнятся уже после закрытия соединения.
+                if (function_exists('fastcgi_finish_request')) {
+                    fastcgi_finish_request();
+                } else {
+                    // Fallback для других SAPI — закрываем буферы и соединение
+                    while (ob_get_level()) {
+                        ob_end_flush();
+                    }
+                    flush();
+                    if (function_exists('connection_aborted') && connection_aborted()) {
+                        return;
+                    }
+                }
 
                 // === ПОКАЗ РЕКЛАМЫ ===
                 try {
