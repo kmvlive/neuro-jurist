@@ -84,6 +84,10 @@
                 <div class="font-semibold text-green-600">📊 Выручка</div>
                 <div class="text-sm text-gray-600">Отчёт по доходам и конверсии</div>
             </a>
+            <a href="{{ route('admin.ai-usage.index') }}" class="block p-4 border-2 border-blue-500 rounded-lg hover:bg-blue-50 transition">
+                <div class="font-semibold text-blue-600">🤖 AI-статистика</div>
+                <div class="text-sm text-gray-600">Токены, скорость и стоимость</div>
+            </a>
             <a href="{{ route('admin.users.index') }}" class="block p-4 border-2 border-primary rounded-lg hover:bg-blue-50 transition">
                 <div class="font-semibold text-primary">Пользователи</div>
                 <div class="text-sm text-gray-600">Управление пользователями системы</div>

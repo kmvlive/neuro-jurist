@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\Admin\AdminPlansController;
 use App\Http\Controllers\Admin\AdminFooterLinksController;
 use App\Http\Controllers\Admin\AdminStatsController;
+use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminPromoCodesController;
 use App\Http\Controllers\Admin\AdminQuickPromptsController;
@@ -77,6 +78,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AdminMiddleware::cla
     Route::get('revenue', [AdminRevenueController::class, 'index'])->name('revenue');
     Route::get('settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
     Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::get('ai-usage', [AiUsageController::class, 'index'])->name('ai-usage.index');
     Route::resource('promo-codes', AdminPromoCodesController::class);
     Route::resource('quick-prompts', AdminQuickPromptsController::class);
     Route::get('quick-prompts/{quickPrompt}/ad', [AdminQuickPromptsController::class, 'editAd'])->name('quick-prompts.ad.edit');

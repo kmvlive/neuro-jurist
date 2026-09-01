@@ -10,6 +10,7 @@ use App\Models\QuickPrompt;
 use App\Models\Ad;
 use App\Services\DocumentParser;
 use App\Services\AI\TimewebAIService;
+use App\Models\AiUsageLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -245,6 +246,7 @@ class ChatController extends Controller
         try {
             $aiService = new TimewebAIService();
             $aiResponse = $aiService->chat($messageForAI, $history);
+            $this->logAiUsage($aiService, $chat->id, 'chat');
         } catch (\Throwable $e) {
             Log::error('Timeweb AI error: ' . $e->getMessage());
             $aiResponse = 'Извините, сервис временно перегружен. Пожалуйста, попробуйте ещё раз через минуту.';
@@ -297,6 +299,7 @@ class ChatController extends Controller
                 try {
                     $categorizeService = new TimewebAIService();
                     $response = trim($categorizeService->chat($categorizePrompt));
+                    $this->logAiUsage($categorizeService, $chat->id, 'categorize');
                     $response = preg_replace('/^```json\s*|```\s*$/', '', $response);
                     $decoded = json_decode($response, true);
                     if (is_array($decoded) && isset($decoded['category'])) {
@@ -471,7 +474,8 @@ class ChatController extends Controller
         $aiService = new TimewebAIService();
         $fullResponse = '';
 
-        return response()->stream(function () use ($aiService, $messageForAI, $history, $chat, &$fullResponse, $content) {
+        $controller = $this;
+        return response()->stream(function () use ($aiService, $messageForAI, $history, $chat, &$fullResponse, $content, $controller) {
             try {
                 foreach ($aiService->chatStream($messageForAI, $history) as $chunk) {
                     $fullResponse .= $chunk;
@@ -479,6 +483,7 @@ class ChatController extends Controller
                     ob_flush();
                     flush();
                 }
+                $controller->logAiUsage($aiService, $chat->id, 'stream');
                 echo "data: " . json_encode(['done' => true, 'chat_id' => $chat->id]) . "\n\n";
                 ob_flush();
                 flush();
@@ -548,6 +553,7 @@ class ChatController extends Controller
                         try {
                             $categorizeService = new TimewebAIService();
                             $response = trim($categorizeService->chat($categorizePrompt));
+                            $this->logAiUsage($categorizeService, $chat->id, 'categorize');
                             $response = preg_replace('/^```json\s*|```\s*$/', '', $response);
                             $decoded = json_decode($response, true);
                             if (is_array($decoded) && isset($decoded['category'])) {
@@ -720,5 +726,26 @@ class ChatController extends Controller
         Chat::where('guest_id', $guestId)
             ->whereNull('user_id')
             ->update(['user_id' => $user->id]);
+    }
+    private function logAiUsage(TimewebAIService $service, ?int $chatId = null, string $type = 'chat'): void
+    {
+        if (!$service->lastUsage) return;
+
+        try {
+            AiUsageLog::create([
+                'chat_id' => $chatId,
+                'user_id' => Auth::id(),
+                'model' => $service->lastUsage['model'],
+                'type' => $type,
+                'prompt_tokens' => $service->lastUsage['prompt_tokens'],
+                'completion_tokens' => $service->lastUsage['completion_tokens'],
+                'reasoning_tokens' => $service->lastUsage['reasoning_tokens'],
+                'first_chunk_ms' => $service->lastUsage['first_chunk_ms'],
+                'total_ms' => $service->lastUsage['total_ms'],
+                'success' => true,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('AI usage logging failed', ['error' => $e->getMessage()]);
+        }
     }
 }
