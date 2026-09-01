@@ -336,12 +336,14 @@
                     </div>
                 @endforeach
             </div>
+            @endif
+            
+            {{-- Ссылка на каталог — ВСЕГДА видна, даже после отправки сообщений --}}
             <div class="mt-3 text-center">
                 <a href="{{ route('prompts.index') }}" class="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition">
                     📚 Весь каталог консультаций ({{ $quickPrompts->count() }} тем) →
                 </a>
             </div>
-            @endif
 </div>
 
 @push('scripts')
@@ -405,7 +407,37 @@ document.addEventListener('DOMContentLoaded', function() {
             window.history.replaceState({}, document.title, cleanUrl);
         }
     }
+
+    // === ВОССТАНОВЛЕНИЕ ЧИПА С ТЕМОЙ ===
+    // Если у текущего чата есть prompt_key — показываем чип с темой
+    const currentChatId = @json($chatId);
+    const currentChatPromptKey = @json($currentChat ? $currentChat->prompt_key : null);
+
+    if (currentChatId && currentChatPromptKey) {
+        const promptData = @json($quickPrompts->keyBy('key'));
+        const prompt = promptData[currentChatPromptKey];
+
+        if (prompt) {
+            let chip = document.getElementById('prompt-topic-chip');
+            if (!chip) {
+                chip = document.createElement('div');
+                chip.id = 'prompt-topic-chip';
+                chip.className = 'flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg px-3 py-1.5 mt-2 w-fit';
+                chip.innerHTML = '<span id="prompt-topic-text"></span><button type="button" id="prompt-topic-clear" class="text-gray-400 hover:text-red-500 font-bold ml-1" title="Сбросить тему">✕</button>';
+                const formEl = document.getElementById('chat-form');
+                if (formEl) {
+                    formEl.parentNode.insertBefore(chip, formEl);
+                    chip.querySelector('#prompt-topic-clear').addEventListener('click', function() {
+                        chip.classList.add('hidden');
+                        chip.classList.remove('flex');
+                    });
+                }
+            }
+            const topicText = (prompt.icon ? prompt.icon + ' ' : '') + prompt.title;
+            chip.querySelector('#prompt-topic-text').textContent = '📌 Тема: ' + topicText;
+        }
     }
+
     if (typeof marked !== 'undefined') {
         marked.setOptions({ breaks: true, gfm: true });
     }
