@@ -626,6 +626,37 @@ class ChatController extends Controller
         ]);
     }
 
+    public function attachTopic(Request $request)
+    {
+        $request->validate(['prompt_key' => 'required|string']);
+
+        $promptKey = $request->input('prompt_key');
+        $prompt = QuickPrompt::where('key', $promptKey)->where('active', true)->firstOrFail();
+
+        $guestId = $this->getGuestId($request);
+        $isGuest = !Auth::check();
+
+        // Удаляем все старые пустые чаты пользователя/гостя (автоочистка мусора)
+        Chat::whereDoesntHave('messages')
+            ->where(function ($q) use ($isGuest, $guestId) {
+                if ($isGuest) {
+                    $q->where('guest_id', $guestId)->whereNull('user_id');
+                } else {
+                    $q->where('user_id', Auth::id());
+                }
+            })
+            ->delete();
+
+        // Создаём новый чат с привязанной темой
+        $chat = Chat::create([
+            'user_id' => $isGuest ? null : Auth::id(),
+            'guest_id' => $isGuest ? $guestId : null,
+            'title' => 'Консультация: ' . $prompt->title,
+            'prompt_key' => $promptKey,
+        ]);
+
+        return redirect()->route('chat.show', ['chat_id' => $chat->id]);
+    }
     public function create()
     {
         $guestId = $this->getGuestId(request());
@@ -658,7 +689,17 @@ class ChatController extends Controller
             return redirect()->route('chat.show', ['chat_id' => $emptyChat->id]);
         }
 
-        // Нет пустых чатов — создаём новый
+        // Нет пустых чатов — создаём новый (удаляя старые пустые на всякий случай)
+        Chat::whereDoesntHave('messages')
+            ->where(function ($q) use ($isGuest, $guestId) {
+                if ($isGuest) {
+                    $q->where('guest_id', $guestId)->whereNull('user_id');
+                } else {
+                    $q->where('user_id', Auth::id());
+                }
+            })
+            ->delete();
+
         $chat = Chat::create([
             'user_id' => $isGuest ? null : Auth::id(),
             'guest_id' => $isGuest ? $guestId : null,

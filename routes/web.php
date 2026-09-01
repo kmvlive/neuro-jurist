@@ -46,6 +46,7 @@ Route::post('/chat/send', [ChatController::class, 'sendMessage'])->name('chat.se
 Route::get('/chat/history', [ChatController::class, 'getChats'])->name('chat.history');
 Route::get('/chat/{id}/messages', [ChatController::class, 'getChatMessages'])->name('chat.messages');
 Route::get('/chat/search-messages', [ChatController::class, 'searchMessages'])->name('chat.search');
+Route::post('/chat/attach-topic', [ChatController::class, 'attachTopic'])->name('chat.attach-topic');
 Route::post('/chat/stream', [ChatController::class, 'stream'])->name('chat.stream');
 Route::post('/chat/create', [ChatController::class, 'create'])->name('chat.create');
 Route::delete('/chat/{id}', [ChatController::class, 'destroy'])->name('chat.destroy');

@@ -351,63 +351,6 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // === АВТООТПРАВКА ПО ССЫЛКЕ ?prompt=KEY ===
-    const urlParams = new URLSearchParams(window.location.search);
-    const autoPrompt = urlParams.get('prompt');
-    if (autoPrompt) {
-        const promptData = @json($quickPrompts->keyBy('key'));
-        const prompt = promptData[autoPrompt];
-
-        if (prompt && (prompt.text || prompt.title)) {
-            setTimeout(() => {
-                const inputEl = document.getElementById('message');
-                const formEl = document.getElementById('chat-form');
-                if (!inputEl || !formEl) return;
-
-                // 1. Подставляем текст промта
-                inputEl.value = prompt.text || prompt.title;
-
-                // 2. Убираем chat_id — сервер создаст НОВЫЙ чат (а не добавит в текущий)
-                const chatIdInput = formEl.querySelector('input[name="chat_id"]');
-                if (chatIdInput) chatIdInput.remove();
-
-                // 3. Добавляем prompt_key, чтобы чат привязался к теме
-                const promptKeyInput = document.createElement('input');
-                promptKeyInput.type = 'hidden';
-                promptKeyInput.name = 'prompt_key';
-                promptKeyInput.value = autoPrompt;
-                formEl.appendChild(promptKeyInput);
-
-                // 4. Создаём чип с темой напрямую (без клика по кнопке)
-                let chip = document.getElementById('prompt-topic-chip');
-                if (!chip) {
-                    chip = document.createElement('div');
-                    chip.id = 'prompt-topic-chip';
-                    chip.className = 'flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg px-3 py-1.5 mt-2 w-fit';
-                    chip.innerHTML = '<span id="prompt-topic-text"></span><button type="button" id="prompt-topic-clear" class="text-gray-400 hover:text-red-500 font-bold ml-1" title="Сбросить тему">✕</button>';
-                    formEl.parentNode.insertBefore(chip, formEl);
-                    chip.querySelector('#prompt-topic-clear').addEventListener('click', function() {
-                        chip.classList.add('hidden');
-                        chip.classList.remove('flex');
-                    });
-                }
-                const topicText = (prompt.icon ? prompt.icon + ' ' : '') + prompt.title;
-                chip.querySelector('#prompt-topic-text').textContent = '📌 Тема: ' + topicText;
-
-                // 5. Автоотправка
-                setTimeout(() => {
-                    if (inputEl.value.trim() && !inputEl.disabled) {
-                        formEl.dispatchEvent(new Event('submit'));
-                    }
-                }, 300);
-            }, 300);
-
-            // Очищаем URL от ?prompt=KEY, чтобы при F5 не запускать повторно
-            const cleanUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-        }
-    }
-
     // === ВОССТАНОВЛЕНИЕ ЧИПА С ТЕМОЙ ===
     // Если у текущего чата есть prompt_key — показываем чип с темой
     const currentChatId = @json($chatId);
@@ -908,9 +851,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Создаём FormData ПЕРЕД очисткой поля
         const formData = new FormData(form);
         formData.set('message', message); // Явно устанавливаем значение
-        if (currentPromptKey) {
-            formData.append('prompt_key', currentPromptKey);
+        // Берём prompt_key приоритетно из input в форме, иначе из currentPromptKey
+        const formPromptKey = form.querySelector('input[name="prompt_key"]')?.value;
+        const promptKeyToSend = formPromptKey || currentPromptKey;
+        if (promptKeyToSend) {
+            formData.set('prompt_key', promptKeyToSend); // set перезаписывает, если вдруг есть дубли
         }
+        console.log('📤 Submit:', {
+            prompt_key_from_form: form.querySelector('input[name="prompt_key"]')?.value,
+            currentPromptKey: currentPromptKey,
+            chat_id: form.querySelector('input[name="chat_id"]')?.value,
+            allFields: [...formData.entries()]
+        });
         if (attachedFile) {
             formData.append('attachment', attachedFile);
         }
