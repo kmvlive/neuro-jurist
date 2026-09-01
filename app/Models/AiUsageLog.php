@@ -31,7 +31,7 @@ class AiUsageLog extends Model
     {
         $prices = config('ai.prices', []);
         $price = $prices[$this->model] ?? null;
-        if (!$price) return 0.0;
+        if (!$price || !isset($price['input'], $price['output'])) return 0.0;
 
         $usd = (($this->prompt_tokens ?? 0) / 1_000_000) * $price['input']
              + (($this->completion_tokens ?? 0) / 1_000_000) * $price['output'];

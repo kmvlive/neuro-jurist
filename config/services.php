@@ -21,4 +21,9 @@ return [
 
     'admin_notify_email' => env('ADMIN_NOTIFY_EMAIL', 'admin@neiro-jurist.ru'),
 
+    'timeweb' => [
+        'key' => env('TIMEWEB_AI_KEY'),
+        'model' => env('TIMEWEB_AI_MODEL', 'deepseek/deepseek-v4-flash'),
+    ],
+
 ];

@@ -36,6 +36,8 @@ class TimewebAIService
         $client = $this->makeClient();
         $messages = $this->buildMessages($userMessage, $history, $topic);
         [$model, $params] = $this->buildParams($messages);
+        // Просим провайдера вернуть usage в финальном чанке стрима
+        $params['stream_options'] = ['include_usage' => true];
 
         $this->lastUsage = [
             'model' => $model,
@@ -61,6 +63,9 @@ class TimewebAIService
                 $this->lastUsage['completion_tokens'] = $response->usage->completionTokens ?? null;
                 $this->lastUsage['reasoning_tokens'] = $response->usage->completionTokensDetails->reasoningTokens ?? null;
             }
+            if (empty($response->choices)) {
+                continue; // финальный чанк с usage — контента нет
+            }
             $content = $response->choices[0]->delta->content ?? '';
             if ($content !== '') {
                 yield $content;
@@ -74,7 +79,7 @@ class TimewebAIService
     private function makeClient()
     {
         return OpenAI::factory()
-            ->withApiKey(env('TIMEWEB_AI_KEY'))
+            ->withApiKey(config('services.timeweb.key') ?: env('TIMEWEB_AI_KEY'))
             ->withBaseUri('https://api.timeweb.ai/v1')
             ->make();
     }
