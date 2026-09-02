@@ -6,6 +6,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', config('app.name', 'Нейро-юрист'))</title>
+    {{-- Мета-теги верификации Google и Яндекс --}}
+    @if(App\Models\Setting::get('google_verification'))
+    <meta name="google-site-verification" content="{{ App\Models\Setting::get('google_verification') }}">
+    @endif
+    @if(App\Models\Setting::get('yandex_verification'))
+    <meta name="yandex-verification" content="{{ App\Models\Setting::get('yandex_verification') }}">
+    @endif
     @stack('meta')
 
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">

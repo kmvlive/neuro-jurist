@@ -115,6 +115,36 @@
             </p>
         </div>
 
+
+        {{-- Верификация Google и Яндекс --}}
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">🔍 Верификация поисковых систем</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Коды верификации для подтверждения прав на сайт. Добавьте эти мета-теги в Google Search Console и Яндекс.Вебмастер.
+            </p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Google Search Console</label>
+                    <input type="text" name="google_verification" value="{{ $googleVerification }}"
+                           class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                           placeholder="google-site-verification=...">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Скопируйте код из <a href="https://search.google.com/search-console" target="_blank" class="text-primary hover:underline">Google Search Console</a> → "Настройки" → "Владение сайтом" → "HTML-тег"
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Яндекс.Вебмастер</label>
+                    <input type="text" name="yandex_verification" value="{{ $yandexVerification }}"
+                           class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                           placeholder="yandex-verification=...">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Скопируйте код из <a href="https://webmaster.yandex.ru/" target="_blank" class="text-primary hover:underline">Яндекс.Вебмастер</a> → "Права на сайт" → "Мета-тег"
+                    </p>
+                </div>
+            </div>
+        </div>
         {{-- Коды счётчиков --}}
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
             <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white dark:text-white">Коды счётчиков аналитики</h2>

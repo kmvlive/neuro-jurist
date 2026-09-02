@@ -12,13 +12,17 @@ class AdminSettingsController extends Controller
     {
         $counterCode = Setting::get('counter_code');
         $aiModel = Setting::get('ai_model', 'deepseek/deepseek-v4-flash');
-        return view('admin.settings', compact('counterCode', 'aiModel'));
+        $googleVerification = Setting::get('google_verification');
+        $yandexVerification = Setting::get('yandex_verification');
+        return view('admin.settings', compact('counterCode', 'aiModel', 'googleVerification', 'yandexVerification'));
     }
 
     public function update(Request $request)
     {
         Setting::set('counter_code', trim($request->input('counter_code', '')));
         Setting::set('ai_model', trim($request->input('ai_model', 'deepseek/deepseek-v4-flash')));
+        Setting::set('google_verification', trim($request->input('google_verification', '')));
+        Setting::set('yandex_verification', trim($request->input('yandex_verification', '')));
         return redirect()->route('admin.settings.edit')->with('success', 'Настройки сохранены');
     }
 }
