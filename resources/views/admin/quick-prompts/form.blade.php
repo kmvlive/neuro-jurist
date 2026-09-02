@@ -13,23 +13,23 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Иконка (эмодзи)</label>
-            <input type="text" name="icon" value="{{ old('icon', $prompt?->icon ?? '📄') }}" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-2xl text-center" maxlength="10">
+            <input type="text" name="icon" value="{{ old('icon', $prompt?->icon ?? '📄') }}" required class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2 text-2xl text-center" maxlength="10">
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Название</label>
-            <input type="text" name="title" value="{{ old('title', $prompt?->title) }}" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2" placeholder="Претензия в магазин">
+            <input type="text" name="title" value="{{ old('title', $prompt?->title) }}" required class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2" placeholder="Претензия в магазин">
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ключ (латиница, для кода)</label>
-            <input type="text" name="key" value="{{ old('key', $prompt?->key) }}" required pattern="[a-z0-9_]+" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 font-mono" placeholder="claim_shop">
+            <input type="text" name="key" value="{{ old('key', $prompt?->key) }}" required pattern="[a-z0-9_]+" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2 font-mono" placeholder="claim_shop">
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Только строчные буквы, цифры и подчёркивания</p>
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Текст промта (инструкция для AI)</label>
-            <textarea name="text" rows="6" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2" placeholder="Действуй как опытный юрист по авторскому праву. Пользователь - фотограф, чьи работы использовали без разрешения. Помоги составить претензию...">{{ old('text', $prompt?->text) }}</textarea>
+            <textarea name="text" rows="6" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 dark:text-white" placeholder="Действуй как опытный юрист по авторскому праву. Пользователь - фотограф, чьи работы использовали без разрешения. Помоги составить претензию...">{{ old('text', $prompt?->text) }}</textarea>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Этот текст отправится как первое сообщение пользователя при клике на промпт. Оставь пустым - отправится только название темы.</p>
         </div>
 
@@ -54,7 +54,7 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Порядок сортировки</label>
-            <input type="number" name="sort_order" value="{{ old('sort_order', $prompt?->sort_order ?? 0) }}" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2">
+            <input type="number" name="sort_order" value="{{ old('sort_order', $prompt?->sort_order ?? 0) }}" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2">
         </div>
 
         <label class="flex items-center gap-2">

@@ -14,18 +14,18 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Текст рекламы</label>
-            <textarea name="content" rows="4" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2" placeholder="Нужна грамотная претензия? Наши юристы составят её за 500 ₽ с гарантией результата!">{{ old('content', $ad?->content) }}</textarea>
+            <textarea name="content" rows="4" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 dark:text-white" placeholder="Нужна грамотная претензия? Наши юристы составят её за 500 ₽ с гарантией результата!">{{ old('content', $ad?->content) }}</textarea>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Можно использовать HTML: &lt;b&gt;, &lt;br&gt;, &lt;a href=""&gt;</p>
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Текст кнопки (необязательно)</label>
-            <input type="text" name="cta_text" value="{{ old('cta_text', $ad?->cta_text) }}" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2" placeholder="Заказать">
+            <input type="text" name="cta_text" value="{{ old('cta_text', $ad?->cta_text) }}" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2" placeholder="Заказать">
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ссылка кнопки (необязательно)</label>
-            <input type="text" name="cta_url" value="{{ old('cta_url', $ad?->cta_url) }}" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2" placeholder="/pricing">
+            <input type="text" name="cta_url" value="{{ old('cta_url', $ad?->cta_url) }}" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2" placeholder="/pricing">
         </div>
 
         <label class="flex items-center gap-2">
@@ -34,7 +34,7 @@
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Реклама активна</span>
         </label>
 
-        <div class="bg-blue-50 border border-blue-200 rounded p-4 text-sm text-blue-800">
+        <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded p-4 text-sm text-blue-800 dark:text-blue-200">
             <strong>Предпросмотр (как будет выглядеть в чате):</strong>
             <div class="mt-3 p-4 bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50 border-l-4 border-orange-400 rounded-lg shadow-sm">
                 <div class="flex items-center gap-1 mb-2 text-orange-700 text-xs font-semibold uppercase tracking-wider">
