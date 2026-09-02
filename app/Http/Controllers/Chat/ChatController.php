@@ -49,7 +49,9 @@ class ChatController extends Controller
 
         // Если чат не выбран — берём последний активный чат пользователя/гостя
         // ИСКЛЮЧЕНИЕ: переход из каталога с ?prompt=KEY — всегда начинаем с НОВОГО чата
-        if (!$currentChat && !$request->filled('prompt')) {
+        // ?topic= как alias для ?prompt= (приход с SEO-лендингов)
+        $topicParam = $request->input('prompt') ?: $request->input('topic');
+        if (!$currentChat && !$topicParam) {
             if ($isGuest) {
                 $currentChat = Chat::where('guest_id', $guestId)
                     ->whereNull('user_id')
@@ -62,6 +64,21 @@ class ChatController extends Controller
 
         if ($currentChat) {
             $messages = $currentChat->messages()->orderBy('created_at')->get();
+        }
+
+        // Если пришли с ?prompt=X или ?topic=X — создаём новый чат с прикрепленной темой
+        if ($topicParam && !$currentChat) {
+            $prompt = \App\Models\QuickPrompt::where('key', $topicParam)->where('active', true)->first();
+            if ($prompt) {
+                $currentChat = Chat::create([
+                    'user_id' => Auth::id(),
+                    'guest_id' => $isGuest ? $guestId : null,
+                    'title' => $prompt->title,
+                    'prompt_key' => $prompt->key,
+                ]);
+                $messages = collect([]);
+                $chatId = $currentChat->id;
+            }
         }
 
         if ($isGuest) {
@@ -90,6 +107,8 @@ class ChatController extends Controller
             'remainingMessages' => $remainingMessages,
             'freeLimit' => self::FREE_LIMIT,
             'quickPrompts' => QuickPrompt::getForChat(),
+            'autoQuestion' => $request->input('q'),
+            'autoPromptKey' => $topicParam,
         ]);
     }
 

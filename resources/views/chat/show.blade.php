@@ -956,6 +956,50 @@ document.addEventListener('DOMContentLoaded', function() {
             input.disabled = false;
         }
     });
+
+    // === АВТООТПРАВКА ВОПРОСА С SEO-ЛЕНДИНГА ===
+    const autoPromptKey = @json($autoPromptKey ?? null);
+    const autoQuestion = @json($autoQuestion ?? null);
+
+    if (autoPromptKey && autoQuestion) {
+        // Ждём пока DOM полностью готов
+        setTimeout(() => {
+            // 1. Прикрепляем тему
+            currentPromptKey = autoPromptKey;
+            const promptData = @json($quickPrompts->keyBy('key'));
+            const prompt = promptData[autoPromptKey];
+            
+            if (prompt) {
+                let chip = document.getElementById('prompt-topic-chip');
+                if (!chip) {
+                    chip = document.createElement('div');
+                    chip.id = 'prompt-topic-chip';
+                    chip.className = 'flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg px-3 py-1.5 mt-2 w-fit';
+                    chip.innerHTML = '<span id="prompt-topic-text"></span><button type="button" id="prompt-topic-clear" class="text-gray-400 hover:text-red-500 font-bold ml-1" title="Сбросить тему">✕</button>';
+                    const formEl = document.getElementById('chat-form');
+                    if (formEl) {
+                        formEl.parentNode.insertBefore(chip, formEl);
+                    }
+                }
+                const topicText = (prompt.icon ? prompt.icon + ' ' : '') + prompt.title;
+                chip.querySelector('#prompt-topic-text').textContent = '📌 Тема: ' + topicText;
+                chip.classList.remove('hidden');
+                chip.classList.add('flex');
+            }
+
+            // 2. Заполняем поле и автоотправляем
+            if (input && form) {
+                input.value = autoQuestion;
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 150) + 'px';
+                
+                // Небольшая задержка для визуального эффекта
+                setTimeout(() => {
+                    form.dispatchEvent(new Event('submit'));
+                }, 500);
+            }
+        }, 700);
+    }
 });
 </script>
 @endpush
