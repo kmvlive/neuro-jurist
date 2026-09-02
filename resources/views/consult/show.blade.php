@@ -10,6 +10,28 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="{{ url()->current() }}">
 
+{{-- schema.org FAQPage микроразметка для красивых сниппетов --}}
+@if($prompt->example_questions && $prompt->example_answers)
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        @foreach($prompt->example_questions as $i => $q)
+        {
+            "@type": "Question",
+            "name": "{{ $q }}",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "{{ $prompt->example_answers[$i] ?? '' }}"
+            }
+        }@if(!$loop->last),@endif
+        @endforeach
+    ]
+}
+</script>
+@endif
+
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     {{-- Хлебные крошки --}}
     <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
@@ -53,11 +75,20 @@
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">❓ Частые вопросы</h2>
             <div class="space-y-3">
-                @foreach($prompt->example_questions as $q)
-                    <a href="{{ route('chat.show', ['topic' => $prompt->key, 'q' => $q]) }}"
-                       class="block p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
-                        {{ $q }}
-                    </a>
+                @foreach($prompt->example_questions as $i => $q)
+                    <details class="group bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden">
+                        <summary class="flex items-center justify-between p-4 cursor-pointer text-gray-800 dark:text-gray-100 font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition list-none">
+                            <span>{{ $q }}</span>
+                            <span class="text-primary dark:text-blue-400 group-open:rotate-45 transition-transform text-xl leading-none">+</span>
+                        </summary>
+                        <div class="px-4 pb-3 text-sm text-gray-600 dark:text-gray-300">
+                            <p class="mb-3">{{ $prompt->example_answers[$i] ?? '' }}</p>
+                            <a href="{{ route('chat.show', ['topic' => $prompt->key, 'q' => $q]) }}"
+                               class="inline-block text-primary dark:text-blue-400 font-medium hover:underline">
+                                💬 Задать этот вопрос AI-юристу →
+                            </a>
+                        </div>
+                    </details>
                 @endforeach
             </div>
         </div>

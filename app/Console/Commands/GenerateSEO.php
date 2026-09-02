@@ -30,7 +30,7 @@ class GenerateSEO extends Command
         $ai = new TimewebAIService();
 
         foreach ($prompts as $prompt) {
-            if (!$force && $prompt->seo_title && $prompt->seo_description && $prompt->seo_text && $prompt->example_questions) {
+            if (!$force && $prompt->seo_title && $prompt->seo_description && $prompt->seo_text && $prompt->example_questions && $prompt->example_answers) {
                 $this->line("⏭️  Пропуск {$prompt->key} (уже заполнено)");
                 continue;
             }
@@ -44,9 +44,10 @@ class GenerateSEO extends Command
                 . "  \"title\": \"SEO-заголовок для страницы (до 70 символов, с ключевыми словами, без кавычек)\",\n"
                 . "  \"description\": \"Мета-описание для сниппета (150-160 символов, привлекательное, с призывом)\",\n"
                 . "  \"text\": \"Экспертный текст для страницы (2-3 абзаца, 1500-2500 символов, со ссылками на статьи законов)\",\n"
-                . "  \"questions\": [\"Вопрос 1\", \"Вопрос 2\", \"Вопрос 3\", \"Вопрос 4\", \"Вопрос 5\"]\n"
+                . "  \"questions\": [\"Вопрос 1\", \"Вопрос 2\", \"Вопрос 3\", \"Вопрос 4\", \"Вопрос 5\"],\n"
+                . "  \"answers\": [\"Краткий экспертный ответ 1 (2-3 предложения, со ссылкой на закон)\", \"Ответ 2\", \"Ответ 3\", \"Ответ 4\", \"Ответ 5\"]\n"
                 . "}\n"
-                . "Вопросы должны быть теми, что реально задают пользователи по этой теме.";
+                . "Вопросы — те, что реально задают пользователи. Ответы — краткие, экспертные, соответствуют вопросам по порядку.";
 
             try {
                 $response = trim($ai->chat($request));
@@ -63,6 +64,7 @@ class GenerateSEO extends Command
                     'seo_description' => $data['description'] ?? $prompt->seo_description,
                     'seo_text' => $data['text'] ?? $prompt->seo_text,
                     'example_questions' => $data['questions'] ?? $prompt->example_questions,
+                    'example_answers' => $data['answers'] ?? $prompt->example_answers,
                 ]);
 
                 $this->info("✅ {$prompt->key}: {$data['title']}");
