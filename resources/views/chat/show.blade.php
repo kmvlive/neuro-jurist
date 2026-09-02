@@ -962,6 +962,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const autoQuestion = @json($autoQuestion ?? null);
 
     if (autoPromptKey && autoQuestion) {
+        // Сразу убираем ?topic=...&q=... из URL — иначе после перезагрузки автоотправка повторится
+        history.replaceState(null, '', window.location.pathname);
         // Ждём пока DOM полностью готов
         setTimeout(() => {
             // 1. Прикрепляем тему

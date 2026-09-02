@@ -66,10 +66,11 @@ class ChatController extends Controller
             $messages = $currentChat->messages()->orderBy('created_at')->get();
         }
 
-        // Если пришли с ?prompt=X или ?topic=X — создаём новый чат с прикрепленной темой
-        if ($topicParam && !$currentChat) {
+        // Если пришли с ?topic=X — новый чат, только если текущий не с этой темой (защита от дублей)
+        // Для share-ссылок ?prompt=X — всегда новый чат (старое поведение)
+        if ($topicParam) {
             $prompt = \App\Models\QuickPrompt::where('key', $topicParam)->where('active', true)->first();
-            if ($prompt) {
+            if ($prompt && ($request->filled('prompt') || !$currentChat || $currentChat->prompt_key !== $prompt->key)) {
                 $currentChat = Chat::create([
                     'user_id' => Auth::id(),
                     'guest_id' => $isGuest ? $guestId : null,
