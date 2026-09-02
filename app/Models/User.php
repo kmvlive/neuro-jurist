@@ -99,6 +99,11 @@ class User extends Authenticatable
         }
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function chats()
     {
         return $this->hasMany(Chat::class);
