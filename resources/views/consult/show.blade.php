@@ -2,8 +2,7 @@
 
 @section('title', $seoTitle)
 
-@section('content')
-{{-- SEO meta --}}
+@push('meta')
 <meta name="description" content="{{ $seoDescription }}">
 <meta property="og:title" content="{{ $seoTitle }}">
 <meta property="og:description" content="{{ $seoDescription }}">
@@ -32,6 +31,38 @@
 </script>
 @endif
 
+{{-- BreadcrumbList + Service: Google показывает крошки в выдаче --}}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Главная", "item": "{{ url('/') }}"},
+                {"@type": "ListItem", "position": 2, "name": "Консультации", "item": "{{ route('consult.index') }}"},
+                {"@type": "ListItem", "position": 3, "name": "{{ $prompt->title }}", "item": "{{ url()->current() }}"}
+            ]
+        },
+        {
+            "@type": "Service",
+            "name": "{{ $prompt->seo_title ?: $prompt->title }}",
+            "description": "{{ $seoDescription }}",
+            "serviceType": "Юридическая консультация",
+            "areaServed": "RU",
+            "provider": {
+                "@type": "Organization",
+                "name": "Нейро-юрист",
+                "url": "{{ url('/') }}"
+            },
+            "offers": {"@type": "Offer", "price": "0", "priceCurrency": "RUB"}
+        }
+    ]
+}
+</script>
+@endpush
+
+@section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     {{-- Хлебные крошки --}}
     <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6">
