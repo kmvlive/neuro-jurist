@@ -33,6 +33,10 @@ Route::post('/templates/{key}/generate', [\App\Http\Controllers\TemplateControll
 Route::get("/prompts", [PromptCatalogController::class, "index"])->name("prompts.index");
 Route::get("/prompts/{slug}", [PromptCatalogController::class, "show"])->name("prompts.show");
 
+// === SEO-ЛЕНДИНГИ: каждая тема = посадочная страница ===
+Route::get("/consult", [App\Http\Controllers\ConsultController::class, "index"])->name("consult.index");
+Route::get("/consult/{key}", [App\Http\Controllers\ConsultController::class, "show"])->name("consult.show");
+
 Route::get('/pricing', [PricingController::class, 'show'])->name('pricing');
 Route::post('/pricing/{plan}', [PricingController::class, 'select'])->name('pricing.select');
 Route::get('/payment/success', [TBankWebhookController::class, 'success'])->name('payment.success');
@@ -83,6 +87,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AdminMiddleware::cla
     Route::resource('promo-codes', AdminPromoCodesController::class);
     Route::resource('quick-prompts', AdminQuickPromptsController::class);
     Route::get('quick-prompts/{quickPrompt}/ad', [AdminQuickPromptsController::class, 'editAd'])->name('quick-prompts.ad.edit');
+    Route::post('quick-prompts/{quickPrompt}/generate-seo', [AdminQuickPromptsController::class, 'generateSeo'])->name('quick-prompts.generate-seo');
     Route::put('quick-prompts/{quickPrompt}/ad', [AdminQuickPromptsController::class, 'updateAd'])->name('quick-prompts.ad.update');
     Route::post('quick-prompts/toggle-all-ads', [AdminQuickPromptsController::class, 'toggleAllAds'])->name('quick-prompts.toggle-all-ads');
     Route::resource("prompt-categories", AdminPromptCategoriesController::class);

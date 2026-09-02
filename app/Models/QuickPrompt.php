@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class QuickPrompt extends Model
 {
-    protected $fillable = ['title', 'key', 'icon', 'text', 'active', 'show_in_chat', 'sort_order'];
+    protected $fillable = ['title', 'key', 'icon', 'text', 'active', 'show_in_chat', 'sort_order', 'seo_title', 'seo_description', 'seo_text', 'example_questions'];
 
     protected $casts = [
         'active' => 'boolean',
         'show_in_chat' => 'boolean',
+        'example_questions' => 'array',
     ];
 
     public function categories()

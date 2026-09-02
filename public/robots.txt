@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Sitemap: http://my.neiro-jurist.ru/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin
+Disallow: /chat
+Disallow: /dashboard
+Disallow: /api

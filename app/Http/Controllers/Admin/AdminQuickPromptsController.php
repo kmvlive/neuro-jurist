@@ -34,9 +34,16 @@ class AdminQuickPromptsController extends Controller
             'sort_order' => 'integer',
             'categories' => 'nullable|array',
             'categories.*' => 'exists:prompt_categories,id',
+            'seo_title' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string',
+            'seo_text' => 'nullable|string',
+            'example_questions' => 'nullable|string',
         ]);
         $categories = $data['categories'] ?? [];
         unset($data['categories']);
+        if (isset($data['example_questions'])) {
+            $data['example_questions'] = array_values(array_filter(array_map('trim', explode("\n", $data['example_questions']))));
+        }
         $prompt = QuickPrompt::create($data);
         $prompt->categories()->sync($categories);
         return redirect()->route('admin.quick-prompts.index')->with('success', 'Промпт создан');
@@ -60,12 +67,46 @@ class AdminQuickPromptsController extends Controller
             'sort_order' => 'integer',
             'categories' => 'nullable|array',
             'categories.*' => 'exists:prompt_categories,id',
+            'seo_title' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string',
+            'seo_text' => 'nullable|string',
+            'example_questions' => 'nullable|string',
         ]);
         $categories = $data['categories'] ?? [];
         unset($data['categories']);
+        if (isset($data['example_questions'])) {
+            $data['example_questions'] = array_values(array_filter(array_map('trim', explode("\n", $data['example_questions']))));
+        }
         $quickPrompt->update($data);
         $quickPrompt->categories()->sync($categories);
         return redirect()->route('admin.quick-prompts.index')->with('success', 'Промпт обновлён');
+    }
+
+    public function generateSeo(QuickPrompt $quickPrompt)
+    {
+        try {
+            $ai = new \App\Services\AI\TimewebAIService();
+            $request = "Ты — SEO-копирайтер для юридического AI-сервиса. Тема консультации: «{$quickPrompt->title}».\n"
+                . "Инструкция для юриста: " . ($quickPrompt->text ?: 'Базовая консультация по теме') . "\n\n"
+                . "Сгенерируй СТРОГО в формате JSON без markdown:\n"
+                . "{\n  \"title\": \"SEO-заголовок (до 70 символов, с ключевыми словами)\",\n  \"description\": \"Мета-описание (150-160 символов)\",\n  \"text\": \"Экспертный текст (2-3 абзаца, со ссылками на статьи законов)\",\n  \"questions\": [\"Вопрос 1\", \"Вопрос 2\", \"Вопрос 3\", \"Вопрос 4\", \"Вопрос 5\"]\n}";
+            $response = trim($ai->chat($request));
+            $response = preg_replace('/^```json\s*|```\s*$/', '', $response);
+            $data = json_decode($response, true);
+            if (is_array($data)) {
+                $quickPrompt->update([
+                    'seo_title' => $data['title'] ?? $quickPrompt->seo_title,
+                    'seo_description' => $data['description'] ?? $quickPrompt->seo_description,
+                    'seo_text' => $data['text'] ?? $quickPrompt->seo_text,
+                    'example_questions' => $data['questions'] ?? $quickPrompt->example_questions,
+                ]);
+                return redirect()->back()->with('success', '✨ SEO-контент сгенерирован');
+            }
+            return redirect()->back()->with('error', 'AI вернул некорректный JSON, попробуйте ещё раз');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('SEO generation failed', ['prompt' => $quickPrompt->id, 'error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Ошибка генерации: ' . $e->getMessage());
+        }
     }
 
     public function destroy(QuickPrompt $quickPrompt)

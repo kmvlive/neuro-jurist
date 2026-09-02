@@ -69,6 +69,36 @@
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Показывать в чате (на главной)</span>
         </label>
 
+        @if($prompt)
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-semibold text-gray-900 dark:text-white">🔍 SEO для лендинга /consult/{{ $prompt->key }}</h2>
+                <form method="POST" action="{{ route('admin.quick-prompts.generate-seo', $prompt) }}">
+                    @csrf
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-lg">✨ Сгенерировать SEO</button>
+                </form>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SEO-заголовок</label>
+                    <input type="text" name="seo_title" value="{{ old('seo_title', $prompt->seo_title) }}" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Мета-описание</label>
+                    <textarea name="seo_description" rows="2" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2 dark:text-white">{{ old('seo_description', $prompt->seo_description) }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Текст страницы</label>
+                    <textarea name="seo_text" rows="5" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2 dark:text-white">{{ old('seo_text', $prompt->seo_text) }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Частые вопросы (по одному в строке)</label>
+                    <textarea name="example_questions" rows="4" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded px-3 py-2 dark:text-white">{{ old('example_questions', implode("\n", $prompt->example_questions ?? [])) }}</textarea>
+                </div>
+                <a href="{{ route('consult.show', $prompt->key) }}" target="_blank" class="text-sm text-primary dark:text-blue-400 hover:underline">👁 Открыть лендинг /consult/{{ $prompt->key }}</a>
+            </div>
+        </div>
+        @endif
         <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 font-medium">Сохранить</button>
     </form>
 </div>

@@ -143,6 +143,7 @@
             @endif
             <p>&copy; {{ date('Y') }} Нейро-юрист. Все права защищены.</p>
             <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">AI-ассистент для юридических задач</p>
+            <p class="mt-3"><a href="/sitemap.xml" class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 text-xs">Карта сайта</a></p>
         </div>
     </footer>
 
