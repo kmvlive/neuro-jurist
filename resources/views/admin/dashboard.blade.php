@@ -5,13 +5,13 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Админ-панель</h1>
-        <p class="text-gray-600 mt-2">Управление пользователями и настройками системы</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Админ-панель</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">Управление пользователями и настройками системы</p>
     </div>
 
     <!-- Статистика -->
     <div class="grid md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center">
                 <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
                     <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,14 +20,14 @@
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Всего пользователей</dt>
-                        <dd class="text-2xl font-semibold text-gray-900">{{ $stats['totalUsers'] }}</dd>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Всего пользователей</dt>
+                        <dd class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['totalUsers'] }}</dd>
                     </dl>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center">
                 <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
                     <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,14 +36,14 @@
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Клиентов</dt>
-                        <dd class="text-2xl font-semibold text-gray-900">{{ $stats['totalClients'] }}</dd>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Клиентов</dt>
+                        <dd class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['totalClients'] }}</dd>
                     </dl>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center">
                 <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
                     <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,8 +52,8 @@
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Администраторов</dt>
-                        <dd class="text-2xl font-semibold text-gray-900">{{ $stats['totalAdmins'] }}</dd>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Администраторов</dt>
+                        <dd class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['totalAdmins'] }}</dd>
                     </dl>
                 </div>
             </div>
@@ -61,44 +61,44 @@
     </div>
 
     <!-- Быстрые ссылки -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Управление</h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <a href="{{ route('admin.promo-codes.index') }}" class="block p-4 border-2 border-pink-500 rounded-lg hover:bg-pink-50 transition">
                 <div class="font-semibold text-pink-600">🎁 Промокоды</div>
-                <div class="text-sm text-gray-600">Скидки и акции</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Скидки и акции</div>
             </a>
             <a href="{{ route('admin.quick-prompts.index') }}" class="block p-4 border-2 border-orange-500 rounded-lg hover:bg-orange-50 transition">
                 <div class="font-semibold text-orange-600">📢 Реклама</div>
-                <div class="text-sm text-gray-600">Quick-промпты и объявления</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Quick-промпты и объявления</div>
             </a>
-            <a href="{{ route('admin.settings.edit') }}" class="block p-4 border-2 border-gray-500 rounded-lg hover:bg-gray-50 transition">
-                <div class="font-semibold text-gray-600">⚙️ Настройки</div>
-                <div class="text-sm text-gray-600">Счётчики и коды сайта</div>
+            <a href="{{ route('admin.settings.edit') }}" class="block p-4 border-2 border-gray-500 rounded-lg hover:bg-gray-50 dark:bg-gray-900 transition">
+                <div class="font-semibold text-gray-600 dark:text-gray-400">⚙️ Настройки</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Счётчики и коды сайта</div>
             </a>
             <a href="{{ route('admin.stats') }}" class="block p-4 border-2 border-purple-500 rounded-lg hover:bg-purple-50 transition">
                 <div class="font-semibold text-purple-600">📊 Статистика</div>
-                <div class="text-sm text-gray-600">Трафик и бизнес-метрики</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Трафик и бизнес-метрики</div>
             </a>
             <a href="{{ route('admin.revenue') }}" class="block p-4 border-2 border-green-500 rounded-lg hover:bg-green-50 transition">
                 <div class="font-semibold text-green-600">📊 Выручка</div>
-                <div class="text-sm text-gray-600">Отчёт по доходам и конверсии</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Отчёт по доходам и конверсии</div>
             </a>
             <a href="{{ route('admin.ai-usage.index') }}" class="block p-4 border-2 border-blue-500 rounded-lg hover:bg-blue-50 transition">
                 <div class="font-semibold text-blue-600">🤖 AI-статистика</div>
-                <div class="text-sm text-gray-600">Токены, скорость и стоимость</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Токены, скорость и стоимость</div>
             </a>
             <a href="{{ route('admin.users.index') }}" class="block p-4 border-2 border-primary rounded-lg hover:bg-blue-50 transition">
                 <div class="font-semibold text-primary">Пользователи</div>
-                <div class="text-sm text-gray-600">Управление пользователями системы</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Управление пользователями системы</div>
             </a>
             <a href="{{ route('admin.plans.index') }}" class="block p-4 border-2 border-green-500 rounded-lg hover:bg-green-50 transition">
                 <div class="font-semibold text-green-600">Тарифы</div>
-                <div class="text-sm text-gray-600">Управление тарифами и ценами</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Управление тарифами и ценами</div>
             </a>
             <a href="{{ route('admin.footer-links.index') }}" class="block p-4 border-2 border-orange-500 rounded-lg hover:bg-orange-50 transition">
                 <div class="font-semibold text-orange-600">Меню футера</div>
-                <div class="text-sm text-gray-600">Навигация в подвале сайта</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Навигация в подвале сайта</div>
             </a>
         </div>
     </div>

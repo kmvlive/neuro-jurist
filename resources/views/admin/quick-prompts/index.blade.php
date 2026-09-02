@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">🎯 Quick-промпты и реклама</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">🎯 Quick-промпты и реклама</h1>
         <div class="flex gap-2 flex-wrap">
             <form method="POST" action="{{ route('admin.quick-prompts.toggle-all-ads') }}" class="inline">
                 @csrf
@@ -32,13 +32,13 @@
 
     <div class="space-y-3">
         @forelse($prompts as $p)
-            <div class="bg-white rounded-lg shadow p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1 flex-wrap">
                             <span class="text-2xl">{{ $p->icon }}</span>
-                            <span class="font-semibold text-gray-900">{{ $p->title }}</span>
-                            <span class="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{{ $p->key }}</span>
+                            <span class="font-semibold text-gray-900 dark:text-white">{{ $p->title }}</span>
+                            <span class="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono">{{ $p->key }}</span>
                             @if($p->categories->count() > 0)
                                 @foreach($p->categories as $cat)
                                     <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
@@ -46,7 +46,7 @@
                                     </span>
                                 @endforeach
                             @else
-                                <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">Без категории</span>
+                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-1 rounded">Без категории</span>
                             @endif
                             @if(!$p->active)
                                 <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Неактивен</span>
@@ -64,13 +64,13 @@
                                 <span class="text-orange-600">⚠ Реклама не настроена</span>
                             @endif
                         </div>
-                        <div class="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300">
+                        <div class="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300">
                             <span>{{ $p->icon }}</span>
                             <span>{{ $p->title }}</span>
                         </div>
                     </div>
                     <div class="flex gap-2 flex-shrink-0 flex-wrap">
-                        <a href="{{ route('admin.quick-prompts.edit', $p) }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm">Ред.</a>
+                        <a href="{{ route('admin.quick-prompts.edit', $p) }}" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-600 text-sm">Ред.</a>
                         <a href="{{ route('admin.quick-prompts.ad.edit', $p) }}" class="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 text-sm font-medium">📢 Реклама</a>
                         <form method="POST" action="{{ route('admin.quick-prompts.destroy', $p) }}" onsubmit="return confirm('Удалить?')">
                             @csrf @method('DELETE')
@@ -80,7 +80,7 @@
                 </div>
             </div>
         @empty
-            <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">Промптов нет</div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">Промптов нет</div>
         @endforelse
     </div>
 </div>

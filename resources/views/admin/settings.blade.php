@@ -6,7 +6,7 @@
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
         <a href="{{ route('admin.dashboard') }}" class="text-primary hover:underline">← Админ-панель</a>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mt-4">⚙️ Настройки сайта</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white dark:text-white mt-4">⚙️ Настройки сайта</h1>
     </div>
 
     @if(session('success'))
@@ -20,14 +20,14 @@
 
         {{-- AI Модель --}}
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <h2 class="text-lg font-semibold mb-2 flex items-center gap-2 text-gray-900 dark:text-white">
+            <h2 class="text-lg font-semibold mb-2 flex items-center gap-2 text-gray-900 dark:text-white dark:text-white">
                 🤖 Модель AI-ассистента
             </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-4">
                 Выберите модель для ответов в чате. Текущая:
-                <code class="bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-2 py-0.5 rounded text-xs">{{ $aiModel }}</code>
+                <code class="bg-gray-100 dark:bg-gray-700 dark:bg-gray-700 dark:text-gray-200 px-2 py-0.5 rounded text-xs">{{ $aiModel }}</code>
             </p>
-            <select name="ai_model" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <select name="ai_model" class="w-full border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:text-white">
                 <optgroup label="⭐ DeepSeek (стабильные, проверенные)">
                     <option value="deepseek/deepseek-v4-flash" {{ $aiModel == 'deepseek/deepseek-v4-flash' ? 'selected' : '' }}>
                         DeepSeek V4 Flash — быстрый, качественный (рекомендуется)
@@ -109,7 +109,7 @@
                     </option>
                 </optgroup>
             </select>
-            <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+            <p class="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-400 mt-2">
                 💡 Для юридического ассистента рекомендуются: <code class="dark:text-gray-200">DeepSeek V4 Flash</code> или <code class="dark:text-gray-200">Qwen 3.5/3.6 Flash</code>.
                 Модели Plus/Max отвечают точнее, но медленнее.
             </p>
@@ -117,13 +117,13 @@
 
         {{-- Коды счётчиков --}}
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Коды счётчиков аналитики</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white dark:text-white">Коды счётчиков аналитики</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-4">
                 Вставьте полный код Яндекс Метрики (теги <code class="dark:text-gray-200">&lt;script&gt;</code> и <code class="dark:text-gray-200">&lt;noscript&gt;</code>).
                 Код будет автоматически добавлен на все страницы сайта.
             </p>
             <textarea name="counter_code" rows="12"
-                      class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 font-mono text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+                      class="w-full border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded px-3 py-2 font-mono text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:text-gray-200"
                       placeholder="<!-- Yandex.Metrika counter --> ...">{{ $counterCode }}</textarea>
         </div>
 

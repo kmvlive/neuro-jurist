@@ -5,7 +5,7 @@
 @section('content')
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">📚 Категории промтов</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">📚 Категории промтов</h1>
         <a href="{{ route('admin.prompt-categories.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">+ Создать категорию</a>
     </div>
 
@@ -14,7 +14,7 @@
     @endif
 
     <table class="w-full">
-        <thead class="bg-gray-50 dark:bg-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-900 dark:bg-gray-700">
             <tr>
                 <th class="px-4 py-2 text-left text-sm font-semibold">Иконка</th>
                 <th class="px-4 py-2 text-left text-sm font-semibold">Название</th>
@@ -27,14 +27,14 @@
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             @foreach($categories as $cat)
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <tr class="hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-700/50">
                     <td class="px-4 py-3 text-2xl">{{ $cat->icon }}</td>
                     <td class="px-4 py-3">
-                        <span class="font-semibold text-gray-900 dark:text-white">
+                        <span class="font-semibold text-gray-900 dark:text-white dark:text-white">
                             {{ $cat->parent_id ? '└─ ' : '' }}{{ $cat->name }}
                         </span>
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $cat->slug }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">{{ $cat->slug }}</td>
                     <td class="px-4 py-3 text-sm">{{ $cat->parent ? $cat->parent->name : '—' }}</td>
                     <td class="px-4 py-3 text-center">{{ $cat->sort_order }}</td>
                     <td class="px-4 py-3 text-center">

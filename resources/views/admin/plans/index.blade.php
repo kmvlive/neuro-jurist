@@ -6,7 +6,7 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
         <a href="{{ route('admin.dashboard') }}" class="text-primary hover:underline">← Админ-панель</a>
-        <h1 class="text-3xl font-bold text-gray-900 mt-4">Управление тарифами</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mt-4">Управление тарифами</h1>
     </div>
 
     @if(session('success'))
@@ -21,25 +21,25 @@
         </div>
     @endif
 
-    <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тариф</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Цена</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Популярный</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Активен</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Тариф</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Цена</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Популярный</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Активен</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Действия</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                 @forelse($plans as $plan)
                 <tr>
                     <td class="px-6 py-4">
-                        <div class="font-semibold text-gray-900">{{ $plan->name }}</div>
-                        <div class="text-sm text-gray-500">ключ: {{ $plan->key }}</div>
+                        <div class="font-semibold text-gray-900 dark:text-white">{{ $plan->name }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">ключ: {{ $plan->key }}</div>
                     </td>
-                    <td class="px-6 py-4 text-gray-900">
+                    <td class="px-6 py-4 text-gray-900 dark:text-white">
                         @if($plan->price == 0)
                             <span class="text-green-600 font-medium">Бесплатно</span>
                         @else
@@ -72,34 +72,34 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">Тарифов пока нет</td>
+                    <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Тарифов пока нет</td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    <div class="mt-8 bg-white shadow rounded-lg p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Добавить новый тариф</h2>
+    <div class="mt-8 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Добавить новый тариф</h2>
         <form method="POST" action="{{ route('admin.plans.store') }}" class="grid md:grid-cols-4 gap-4">
             @csrf
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Ключ (латиницей, без пробелов)</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ключ (латиницей, без пробелов)</label>
                 <input type="text" name="key" required placeholder="premium"
-                    class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary">
                 @error('key')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Название</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Название</label>
                 <input type="text" name="name" required placeholder="Премиум"
-                    class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Цена, ₽ (0 = бесплатно)</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Цена, ₽ (0 = бесплатно)</label>
                 <input type="number" name="price" required min="0" placeholder="1990"
-                    class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary">
             </div>
             <div class="flex items-end">
                 <button type="submit" class="w-full bg-primary text-white py-2 rounded-md hover:bg-blue-700">

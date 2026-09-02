@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">🎁 Промокоды</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white dark:text-white">🎁 Промокоды</h1>
         <a href="{{ route('admin.promo-codes.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-center font-medium">+ Создать промокод</a>
     </div>
 
@@ -22,9 +22,9 @@
                         {{ $pc->isValid() ? 'Активен' : 'Неактивен' }}
                     </span>
                 </div>
-                <div class="text-sm text-gray-600 dark:text-gray-300 mb-1">Скидка: <strong>{{ $pc->discount_percent }}%</strong></div>
-                <div class="text-sm text-gray-600 dark:text-gray-300 mb-1">Использований: {{ $pc->used_count }}{{ $pc->max_uses ? ' из ' . $pc->max_uses : '' }}</div>
-                <div class="text-sm text-gray-600 dark:text-gray-300 mb-2">До: {{ $pc->expires_at ? $pc->expires_at->format('d.m.Y') : 'бессрочно' }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-300 mb-1">Скидка: <strong>{{ $pc->discount_percent }}%</strong></div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-300 mb-1">Использований: {{ $pc->used_count }}{{ $pc->max_uses ? ' из ' . $pc->max_uses : '' }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-300 mb-2">До: {{ $pc->expires_at ? $pc->expires_at->format('d.m.Y') : 'бессрочно' }}</div>
                 
                 @if($pc->one_per_user || $pc->new_users_only || $pc->user)
                     <div class="flex flex-wrap gap-1 mb-3">
@@ -41,7 +41,7 @@
                 @endif
                 
                 <div class="flex gap-2">
-                    <a href="{{ route('admin.promo-codes.edit', $pc) }}" class="flex-1 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 rounded text-center text-sm">Ред.</a>
+                    <a href="{{ route('admin.promo-codes.edit', $pc) }}" class="flex-1 bg-gray-50 dark:bg-gray-900 dark:bg-gray-700 text-gray-700 dark:text-gray-300 dark:text-gray-200 py-2 rounded text-center text-sm">Ред.</a>
                     <form method="POST" action="{{ route('admin.promo-codes.destroy', $pc) }}" class="flex-1" onsubmit="return confirm('Удалить промокод?')">
                         @csrf @method('DELETE')
                         <button class="w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded text-sm">Удалить</button>
@@ -49,31 +49,31 @@
                 </div>
             </div>
         @empty
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">Промокодов нет</div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400 dark:text-gray-400">Промокодов нет</div>
         @endforelse
     </div>
 
     <div class="hidden sm:block bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900 dark:bg-gray-700">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Код</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Скидка</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Использований</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Действует до</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Ограничения</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Статус</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Действия</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-300 uppercase">Код</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-300 uppercase">Скидка</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-300 uppercase">Использований</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-300 uppercase">Действует до</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-300 uppercase">Ограничения</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-300 uppercase">Статус</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-300 uppercase">Действия</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($promoCodes as $pc)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <tr class="hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-700">
                             <td class="px-6 py-4 font-mono font-bold text-primary dark:text-blue-400">{{ $pc->code }}</td>
-                            <td class="px-6 py-4 text-gray-900 dark:text-gray-100">{{ $pc->discount_percent }}%</td>
-                            <td class="px-6 py-4 text-gray-900 dark:text-gray-100">{{ $pc->used_count }}{{ $pc->max_uses ? ' / ' . $pc->max_uses : '' }}</td>
-                            <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ $pc->expires_at ? $pc->expires_at->format('d.m.Y') : '—' }}</td>
+                            <td class="px-6 py-4 text-gray-900 dark:text-white dark:text-gray-100">{{ $pc->discount_percent }}%</td>
+                            <td class="px-6 py-4 text-gray-900 dark:text-white dark:text-gray-100">{{ $pc->used_count }}{{ $pc->max_uses ? ' / ' . $pc->max_uses : '' }}</td>
+                            <td class="px-6 py-4 text-gray-500 dark:text-gray-400 dark:text-gray-400">{{ $pc->expires_at ? $pc->expires_at->format('d.m.Y') : '—' }}</td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-wrap gap-1">
                                     @if($pc->one_per_user)
@@ -101,7 +101,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Промокодов нет</td></tr>
+                        <tr><td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400 dark:text-gray-400">Промокодов нет</td></tr>
                     @endforelse
                 </tbody>
             </table>
