@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-Sitemap: http://my.neiro-jurist.ru/sitemap.xml
+Sitemap: https://my.neiro-jurist.ru/sitemap.xml
 
 # Disallow admin and private areas
 Disallow: /admin
