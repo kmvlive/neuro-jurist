@@ -3,58 +3,89 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Models\Chat;
 use App\Models\Message;
 use App\Models\MessageFeedback;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class FeedbackController extends Controller
 {
     /**
-     * Сохранить/обновить голос 👍/ за сообщение ассистента
+     * Сохранить/обновить голос 👍/👎 за сообщение ассистента
      */
     public function store(Request $request, Message $message)
     {
-        $vote = (int) $request->input('vote');
-        if (!in_array($vote, [1, -1], true)) {
-            return response()->json(['error' => 'Некорректный голос'], 422);
-        }
+        try {
+            $vote = (int) $request->input('vote');
+            if (!in_array($vote, [1, -1], true)) {
+                return response()->json(['error' => 'Некорректный голос'], 422);
+            }
 
-        // Фидбек только за ответы ассистента
-        if ($message->role !== 'assistant') {
-            return response()->json(['error' => 'Оценивать можно только ответы ассистента'], 422);
-        }
+            // Фидбек только за ответы ассистента
+            if ($message->role !== 'assistant') {
+                return response()->json(['error' => 'Оценивать можно только ответы ассистента'], 422);
+            }
 
-        $userId = Auth::id();
-        $guestId = Auth::check() ? null : ($request->cookie('guest_id') ?? session('guest_id'));
+            $userId = Auth::id();
+            // Читаем guest_id из той же cookie, что и ChatController
+            $guestId = Auth::check() ? null : $request->cookie('nj_guest_id');
 
-        if (!$userId && !$guestId) {
-            return response()->json(['error' => 'Не удалось определить пользователя'], 422);
-        }
+            // Проверка: сообщение должно принадлежать чату пользователя
+            $chat = $message->chat;
+            if (!$chat) {
+                return response()->json(['error' => 'Чат не найден'], 404);
+            }
 
-        $query = MessageFeedback::where('message_id', $message->id);
-        $userId
-            ? $query->where('user_id', $userId)
-            : $query->where('guest_id', $guestId);
+            if ($userId) {
+                if ($chat->user_id !== $userId) {
+                    return response()->json(['error' => 'Нет доступа к этому сообщению'], 403);
+                }
+            } else {
+                if (!$guestId || $chat->guest_id !== $guestId || $chat->user_id !== null) {
+                    return response()->json(['error' => 'Нет доступа к этому сообщению'], 403);
+                }
+            }
 
-        $feedback = $query->first();
+            if (!$userId && !$guestId) {
+                return response()->json(['error' => 'Не удалось определить пользователя'], 422);
+            }
 
-        if ($feedback && $feedback->vote === $vote) {
-            // Повторный клик по тому же — снимаем голос
-            $feedback->delete();
-            return response()->json(['status' => 'removed', 'vote' => null]);
-        }
+            $query = MessageFeedback::where('message_id', $message->id);
+            $userId
+                ? $query->where('user_id', $userId)
+                : $query->where('guest_id', $guestId);
 
-        $feedback
-            ? $feedback->update(['vote' => $vote])
-            : MessageFeedback::create([
+            $feedback = $query->first();
+
+            if ($feedback && $feedback->vote === $vote) {
+                // Повторный клик по тому же — снимаем голос
+                $feedback->delete();
+                return response()->json(['status' => 'removed', 'vote' => null]);
+            }
+
+            $feedback
+                ? $feedback->update(['vote' => $vote])
+                : MessageFeedback::create([
+                    'message_id' => $message->id,
+                    'vote' => $vote,
+                    'user_id' => $userId,
+                    'guest_id' => $guestId,
+                ]);
+
+            Log::info('Feedback saved', [
                 'message_id' => $message->id,
                 'vote' => $vote,
                 'user_id' => $userId,
-                'guest_id' => $guestId,
+                'guest_id' => $guestId ? 'set' : null,
             ]);
 
-        return response()->json(['status' => 'saved', 'vote' => $vote]);
+            return response()->json(['status' => 'saved', 'vote' => $vote]);
+        } catch (\Throwable $e) {
+            Log::error('Feedback error: ' . $e->getMessage());
+            return response()->json(['error' => 'Ошибка сервера: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -62,21 +93,26 @@ class FeedbackController extends Controller
      */
     public function comment(Request $request, Message $message)
     {
-        $userId = Auth::id();
-        $guestId = Auth::check() ? null : ($request->cookie('guest_id') ?? session('guest_id'));
+        try {
+            $userId = Auth::id();
+            $guestId = Auth::check() ? null : $request->cookie('nj_guest_id');
 
-        $query = MessageFeedback::where('message_id', $message->id);
-        $userId
-            ? $query->where('user_id', $userId)
-            : $query->where('guest_id', $guestId);
+            $query = MessageFeedback::where('message_id', $message->id);
+            $userId
+                ? $query->where('user_id', $userId)
+                : $query->where('guest_id', $guestId);
 
-        $feedback = $query->first();
-        if (!$feedback) {
-            return response()->json(['error' => 'Сначала поставьте оценку'], 422);
+            $feedback = $query->first();
+            if (!$feedback) {
+                return response()->json(['error' => 'Сначала поставьте оценку'], 422);
+            }
+
+            $feedback->update(['comment' => trim((string) $request->input('comment')) ?: null]);
+
+            return response()->json(['status' => 'saved']);
+        } catch (\Throwable $e) {
+            Log::error('Feedback comment error: ' . $e->getMessage());
+            return response()->json(['error' => 'Ошибка сервера: ' . $e->getMessage()], 500);
         }
-
-        $feedback->update(['comment' => trim((string) $request->input('comment')) ?: null]);
-
-        return response()->json(['status' => 'saved']);
     }
 }

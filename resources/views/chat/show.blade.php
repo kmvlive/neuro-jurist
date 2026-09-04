@@ -1057,6 +1057,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const data = await response.json();
+            if (!response.ok) { console.error('Фидбек ошибка:', response.status, data); }
 
             if (data.status === 'removed') {
                 saveFeedbackState(messageId, null);
@@ -1078,14 +1079,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Отмена комментария
-    document.getElementById('feedback-comment-cancel').addEventListener('click', () => {
+    document.getElementById('feedback-comment-cancel')?.addEventListener('click', () => {
         feedbackModal.classList.add('hidden');
         feedbackModal.classList.remove('flex');
         feedbackCommentText.value = '';
     });
 
     // Отправка комментария
-    document.getElementById('feedback-comment-submit').addEventListener('click', async () => {
+    document.getElementById('feedback-comment-submit')?.addEventListener('click', async () => {
         if (!currentFeedbackMessageId) return;
 
         const comment = feedbackCommentText.value.trim();
@@ -1120,4 +1121,16 @@ document.addEventListener('DOMContentLoaded', function() {
 @endpush
         </div>
     </div>
+
+{{-- Модальное окно для комментария к отрицательному отзыву --}}
+<div id="feedback-comment-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Что не так с ответом?</h3>
+        <textarea id="feedback-comment-text" rows="4" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Опишите, что можно улучшить..."></textarea>
+        <div class="flex gap-2 mt-4">
+            <button type="button" id="feedback-comment-cancel" class="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600">Отмена</button>
+            <button type="button" id="feedback-comment-submit" class="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-blue-700">Отправить</button>
+        </div>
+    </div>
+</div>
 @endsection
