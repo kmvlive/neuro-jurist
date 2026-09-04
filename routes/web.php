@@ -86,10 +86,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AdminMiddleware::cla
     Route::get('settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
     Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     Route::get('ai-usage', [AiUsageController::class, 'index'])->name('ai-usage.index');
+    Route::get('feedback', [App\Http\Controllers\Admin\AdminFeedbackController::class, 'index'])->name('feedback');
     Route::resource('promo-codes', AdminPromoCodesController::class);
     Route::resource('quick-prompts', AdminQuickPromptsController::class);
     Route::get('quick-prompts/{quickPrompt}/ad', [AdminQuickPromptsController::class, 'editAd'])->name('quick-prompts.ad.edit');
     Route::post('quick-prompts/{quickPrompt}/generate-seo', [AdminQuickPromptsController::class, 'generateSeo'])->name('quick-prompts.generate-seo');
+    Route::post('quick-prompts/{quickPrompt}/improve', [AdminQuickPromptsController::class, 'improvePrompt'])->name('quick-prompts.improve');
+    Route::put('quick-prompts/{quickPrompt}/apply-improved', [AdminQuickPromptsController::class, 'applyImprovedPrompt'])->name('quick-prompts.apply-improved');
     Route::put('quick-prompts/{quickPrompt}/ad', [AdminQuickPromptsController::class, 'updateAd'])->name('quick-prompts.ad.update');
     Route::post('quick-prompts/toggle-all-ads', [AdminQuickPromptsController::class, 'toggleAllAds'])->name('quick-prompts.toggle-all-ads');
     Route::resource("prompt-categories", AdminPromptCategoriesController::class);

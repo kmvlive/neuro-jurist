@@ -84,6 +84,24 @@
                 <div class="font-semibold text-green-600">📊 Выручка</div>
                 <div class="text-sm text-gray-600 dark:text-gray-400">Отчёт по доходам и конверсии</div>
             </a>
+            @php
+                $fbTotal = $stats['feedbackUp'] + $stats['feedbackDown'];
+                $fbRate = $fbTotal > 0 ? round($stats['feedbackUp'] / $fbTotal * 100) : 0;
+            @endphp
+            <a href="{{ route('admin.feedback') }}" class="block p-4 border-2 border-orange-500 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition relative">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="font-semibold text-orange-600 dark:text-orange-400">💬 Отзывы</div>
+                    <span class="text-xs font-bold {{ $fbRate >= 70 ? 'text-green-600' : 'text-orange-600' }}">{{ $fbRate }}% 👍</span>
+                </div>
+                <div class="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
+                    <span>👍 {{ $stats['feedbackUp'] }}</span>
+                    <span>👎 {{ $stats['feedbackDown'] }}</span>
+                    @if($stats['feedbackComments'] > 0)
+                        <span class="font-medium text-red-600 dark:text-red-400">💬 {{ $stats['feedbackComments'] }}</span>
+                    @endif
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">Фидбек на ответы AI</div>
+            </a>
             <a href="{{ route('admin.ai-usage.index') }}" class="block p-4 border-2 border-blue-500 rounded-lg hover:bg-blue-50 transition">
                 <div class="font-semibold text-blue-600">🤖 AI-статистика</div>
                 <div class="text-sm text-gray-600 dark:text-gray-400">Токены, скорость и стоимость</div>

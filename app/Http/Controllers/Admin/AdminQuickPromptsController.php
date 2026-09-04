@@ -13,7 +13,22 @@ class AdminQuickPromptsController extends Controller
     public function index()
     {
         $prompts = QuickPrompt::with('categories')->orderBy('sort_order')->get();
-        return view('admin.quick-prompts.index', compact('prompts'));
+        
+        // Добавляем статистику отзывов для каждого промпта
+        $feedbackStats = \App\Models\MessageFeedback::selectRaw('
+            c.prompt_key,
+            COUNT(*) as total,
+            SUM(CASE WHEN f.vote = 1 THEN 1 ELSE 0 END) as up,
+            SUM(CASE WHEN f.vote = -1 THEN 1 ELSE 0 END) as down
+        ')
+        ->join('messages as m', 'm.id', '=', 'message_feedbacks.message_id')
+        ->join('chats as c', 'c.id', '=', 'm.chat_id')
+        ->whereIn('c.prompt_key', $prompts->pluck('key'))
+        ->groupBy('c.prompt_key')
+        ->get()
+        ->keyBy('prompt_key');
+        
+        return view('admin.quick-prompts.index', compact('prompts', 'feedbackStats'));
     }
 
     public function create()
@@ -153,4 +168,159 @@ class AdminQuickPromptsController extends Controller
         return redirect()->route('admin.quick-prompts.index')->with('success', $msg);
     }
 
+
+    /**
+     * 🤖 Улучшение промпта на основе фидбека пользователей
+     */
+    public function improvePrompt(QuickPrompt $quickPrompt)
+    {
+        try {
+            $feedbacks = \App\Models\MessageFeedback::whereHas('message.chat', function($q) use ($quickPrompt) {
+                    $q->where('prompt_key', $quickPrompt->key);
+                })
+                ->where('vote', -1)
+                ->with(['message' => function($q) {
+                    $q->with(['chat.messages' => function($q) {
+                        $q->where('role', 'user')->orderBy('created_at', 'desc');
+                    }]);
+                }])
+                ->latest()
+                ->limit(20)
+                ->get();
+
+            $positiveFeedbacks = \App\Models\MessageFeedback::whereHas('message.chat', function($q) use ($quickPrompt) {
+                    $q->where('prompt_key', $quickPrompt->key);
+                })
+                ->where('vote', 1)
+                ->count();
+
+            $totalFeedbacks = $feedbacks->count() + $positiveFeedbacks;
+
+            $issues = [];
+            foreach ($feedbacks as $fb) {
+                $comment = trim($fb->comment ?? '');
+                $answer = $fb->message ? \Illuminate\Support\Str::limit($fb->message->content, 300) : '';
+                
+                $question = '';
+                if ($fb->message && $fb->message->chat) {
+                    $userMsg = $fb->message->chat->messages
+                        ->where('role', 'user')
+                        ->where('created_at', '<', $fb->message->created_at)
+                        ->sortByDesc('created_at')
+                        ->first();
+                    $question = $userMsg ? \Illuminate\Support\Str::limit($userMsg->content, 200) : '';
+                }
+                
+                $issues[] = [
+                    'question' => $question,
+                    'answer' => $answer,
+                    'comment' => $comment ?: '(комментарий не указан)',
+                ];
+            }
+
+            // Если нет отзывов, генерируем улучшения на основе лучших практик
+            $hasFeedback = !empty($issues) || $totalFeedbacks >= 3;
+
+            $issuesText = '';
+            foreach ($issues as $i => $issue) {
+                $issuesText .= "\n\n### Отзыв " . ($i + 1) . ":\n";
+                if ($issue['question']) $issuesText .= "**Вопрос:** {$issue['question']}\n";
+                if ($issue['answer'])   $issuesText .= "**Ответ AI (проблемный):** {$issue['answer']}\n";
+                $issuesText .= "**Замечание пользователя:** {$issue['comment']}";
+            }
+
+            $currentText = $quickPrompt->text ?: '(базовая консультация по теме)';
+            
+            // Формируем блок замечаний
+            $issuesBlock = trim($issuesText) ?: '(отзывов пока нет — предложи улучшения на основе лучших практик для юридических консультаций)';
+
+            $request = "Ты — эксперт по улучшению системных промптов для юридических AI-консультантов.
+
+## Контекст
+- **Тема консультации:** «{$quickPrompt->title}»
+- **Текущий промпт (инструкция для AI):**
+{$currentText}
+
+## Статистика фидбека
+- Всего оценок: {$totalFeedbacks}
+- Полезных (👍): {$positiveFeedbacks}
+- Плохих (👎): {$feedbacks->count()}
+
+## Замечания пользователей (плохие ответы + их комментарии)
+{$issuesBlock}
+
+## Задача
+Проанализируй замечания и улучши промпт так, чтобы:
+1. Учесть конкретные жалобы пользователей
+2. Добавить недостающие элементы (примеры, ссылки на законы, структуру)
+3. Сохранить юридическую точность
+4. Ответы стали более конкретными и полезными
+
+## Формат ответа (СТРОГО JSON без markdown)
+{
+  \"improved_text\": \"Улучшенный текст промпта (2000-5000 символов)\",
+  \"changes_summary\": \"Краткое описание 3-5 ключевых изменений (1-2 предложения)\",
+  \"issues_addressed\": [\"Проблема 1\", \"Проблема 2\", \"Проблема 3\"]
+}";
+
+            $ai = new \App\Services\AI\TimewebAIService();
+            $response = trim($ai->chat($request));
+            $response = preg_replace('/^```json\s*|```\s*$/', '', $response);
+            $response = preg_replace('/^```\w*\s*|\s*```\s*$/', '', $response);
+            
+            $data = json_decode($response, true);
+            
+            if (!is_array($data) || empty($data['improved_text'])) {
+                \Illuminate\Support\Facades\Log::warning('Improve prompt failed: bad JSON', ['response' => $response]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'AI вернул некорректный формат. Попробуйте ещё раз.'
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'current_text' => $currentText,
+                'improved_text' => $data['improved_text'],
+                'changes_summary' => $data['changes_summary'] ?? '',
+                'issues_addressed' => $data['issues_addressed'] ?? [],
+                'stats' => [
+                    'total' => $totalFeedbacks,
+                    'up' => $positiveFeedbacks,
+                    'down' => $feedbacks->count(),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Improve prompt error', [
+                'prompt' => $quickPrompt->id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Применить улучшенный промпт
+     */
+    public function applyImprovedPrompt(Request $request, QuickPrompt $quickPrompt)
+    {
+        $data = $request->validate([
+            'improved_text' => 'required|string',
+        ]);
+
+        $quickPrompt->update(['text' => $data['improved_text']]);
+
+        \Illuminate\Support\Facades\Log::info('Prompt improved via AI', [
+            'prompt_id' => $quickPrompt->id,
+            'prompt_key' => $quickPrompt->key,
+        ]);
+
+        return redirect()
+            ->route('admin.quick-prompts.edit', $quickPrompt)
+            ->with('success', '✨ Промпт улучшен и сохранён! Теперь AI будет отвечать лучше по теме "' . $quickPrompt->title . '"');
+    }
 }
+
