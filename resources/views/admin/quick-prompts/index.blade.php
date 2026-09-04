@@ -180,19 +180,43 @@
         error.classList.add('hidden');
 
         try {
+            // Получаем CSRF-токен из meta или cookie
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content 
+                || document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+            
+            if (!csrfToken) {
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                error.querySelector('p').textContent = 'CSRF-токен не найден. Обновите страницу.';
+                return;
+            }
+
             const response = await fetch(`/admin/quick-prompts/${currentPromptId}/improve`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
             });
 
-            const data = await response.json();
             loading.classList.add('hidden');
 
-            if (!data.success) {
+            // Проверяем, что ответ - JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Server returned HTML:', text.substring(0, 200));
+                error.classList.remove('hidden');
+                error.querySelector('p').textContent = 'Сессия истекла. Обновите страницу и попробуйте снова.';
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
                 error.classList.remove('hidden');
                 error.querySelector('p').textContent = data.message || 'Ошибка улучшения';
                 return;

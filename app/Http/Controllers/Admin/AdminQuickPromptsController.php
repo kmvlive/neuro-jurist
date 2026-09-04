@@ -174,6 +174,12 @@ class AdminQuickPromptsController extends Controller
      */
     public function improvePrompt(QuickPrompt $quickPrompt)
     {
+        \Illuminate\Support\Facades\Log::info('Improve prompt called', [
+            'prompt_id' => $quickPrompt->id,
+            'user_id' => auth()->id(),
+            'has_csrf' => request()->header('X-CSRF-TOKEN') ? 'yes' : 'no',
+        ]);
+        
         try {
             $feedbacks = \App\Models\MessageFeedback::whereHas('message.chat', function($q) use ($quickPrompt) {
                     $q->where('prompt_key', $quickPrompt->key);
