@@ -52,6 +52,8 @@ Route::get('/chat/{id}/messages', [ChatController::class, 'getChatMessages'])->n
 Route::get('/chat/search-messages', [ChatController::class, 'searchMessages'])->name('chat.search');
 Route::post('/chat/attach-topic', [ChatController::class, 'attachTopic'])->name('chat.attach-topic');
 Route::post('/chat/stream', [ChatController::class, 'stream'])->name('chat.stream');
+Route::post('/chat/message/{message}/feedback', [App\Http\Controllers\Chat\FeedbackController::class, 'store'])->name('chat.feedback');
+Route::post('/chat/message/{message}/feedback/comment', [App\Http\Controllers\Chat\FeedbackController::class, 'comment'])->name('chat.feedback.comment');
 Route::post('/chat/create', [ChatController::class, 'create'])->name('chat.create');
 Route::delete('/chat/{id}', [ChatController::class, 'destroy'])->name('chat.destroy');
 

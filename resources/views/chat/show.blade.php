@@ -221,6 +221,8 @@
                                     <span class="text-xs opacity-75">{{ $msg->created_at->diffForHumans() }}</span>
                                     <button type="button" class="copy-btn text-xs opacity-70 hover:opacity-100" data-raw="{{ e($msg->content) }}" title="Копировать">📋</button>
                                     <button type="button" class="speak-btn text-xs opacity-70 hover:opacity-100" data-raw="{{ e($msg->content) }}" title="Озвучить ответ">🔊</button>
+                                    <button type="button" class="feedback-btn feedback-up text-xs opacity-70 hover:opacity-100" data-message-id="{{ $msg->id }}" title="Полезный ответ">👍</button>
+                                    <button type="button" class="feedback-btn feedback-down text-xs opacity-70 hover:opacity-100" data-message-id="{{ $msg->id }}" title="Плохой ответ">👎</button>
                                 </div>
                             @else
                                 @if($msg->file_name)
@@ -1002,6 +1004,117 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 700);
     }
+
+    // === ФИДБЕК 👍/👎 ===
+    const feedbackModal = document.getElementById('feedback-comment-modal');
+    const feedbackCommentText = document.getElementById('feedback-comment-text');
+    let currentFeedbackMessageId = null;
+
+    // Загрузка состояния кнопок из localStorage
+    function loadFeedbackState() {
+        const state = JSON.parse(localStorage.getItem('feedback_state') || '{}');
+        document.querySelectorAll('.feedback-btn').forEach(btn => {
+            const msgId = btn.dataset.messageId;
+            const vote = state[msgId];
+            btn.classList.remove('opacity-100', 'font-bold');
+            if (btn.classList.contains('feedback-up') && vote === 1) {
+                btn.classList.add('opacity-100', 'font-bold');
+                btn.style.color = '#22c55e';
+            } else if (btn.classList.contains('feedback-down') && vote === -1) {
+                btn.classList.add('opacity-100', 'font-bold');
+                btn.style.color = '#ef4444';
+            }
+        });
+    }
+
+    // Сохранение состояния в localStorage
+    function saveFeedbackState(messageId, vote) {
+        const state = JSON.parse(localStorage.getItem('feedback_state') || '{}');
+        if (vote === null) {
+            delete state[messageId];
+        } else {
+            state[messageId] = vote;
+        }
+        localStorage.setItem('feedback_state', JSON.stringify(state));
+    }
+
+    // Обработчик клика на кнопки 👍/👎
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.feedback-btn');
+        if (!btn) return;
+
+        const messageId = btn.dataset.messageId;
+        const vote = btn.classList.contains('feedback-up') ? 1 : -1;
+
+        try {
+            const response = await fetch(`/chat/message/${messageId}/feedback`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ vote })
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'removed') {
+                saveFeedbackState(messageId, null);
+            } else if (data.status === 'saved') {
+                saveFeedbackState(messageId, vote);
+                
+                // Если 👎 — показать модалку для комментария
+                if (vote === -1) {
+                    currentFeedbackMessageId = messageId;
+                    feedbackModal.classList.remove('hidden');
+                    feedbackModal.classList.add('flex');
+                }
+            }
+
+            loadFeedbackState();
+        } catch (error) {
+            console.error('Ошибка фидбека:', error);
+        }
+    });
+
+    // Отмена комментария
+    document.getElementById('feedback-comment-cancel').addEventListener('click', () => {
+        feedbackModal.classList.add('hidden');
+        feedbackModal.classList.remove('flex');
+        feedbackCommentText.value = '';
+    });
+
+    // Отправка комментария
+    document.getElementById('feedback-comment-submit').addEventListener('click', async () => {
+        if (!currentFeedbackMessageId) return;
+
+        const comment = feedbackCommentText.value.trim();
+        if (!comment) {
+            alert('Введите комментарий');
+            return;
+        }
+
+        try {
+            await fetch(`/chat/message/${currentFeedbackMessageId}/feedback/comment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ comment })
+            });
+
+            feedbackModal.classList.add('hidden');
+            feedbackModal.classList.remove('flex');
+            feedbackCommentText.value = '';
+            currentFeedbackMessageId = null;
+        } catch (error) {
+            console.error('Ошибка отправки комментария:', error);
+        }
+    });
+
+    // Загрузка состояния при загрузке страницы
+    loadFeedbackState();
 });
 </script>
 @endpush
