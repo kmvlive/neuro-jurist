@@ -18,8 +18,8 @@ class AdminQuickPromptsController extends Controller
         $feedbackStats = \App\Models\MessageFeedback::selectRaw('
             c.prompt_key,
             COUNT(*) as total,
-            SUM(CASE WHEN f.vote = 1 THEN 1 ELSE 0 END) as up,
-            SUM(CASE WHEN f.vote = -1 THEN 1 ELSE 0 END) as down
+            SUM(CASE WHEN message_feedbacks.vote = 1 THEN 1 ELSE 0 END) as up,
+            SUM(CASE WHEN message_feedbacks.vote = -1 THEN 1 ELSE 0 END) as down
         ')
         ->join('messages as m', 'm.id', '=', 'message_feedbacks.message_id')
         ->join('chats as c', 'c.id', '=', 'm.chat_id')
