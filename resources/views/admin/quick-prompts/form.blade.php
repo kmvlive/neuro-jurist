@@ -109,13 +109,10 @@
         <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="text-sm font-semibold text-gray-900 dark:text-white">🔍 SEO для лендинга /consult/{{ $prompt->key }}</h2>
-                <form method="POST" action="{{ route('admin.quick-prompts.generate-seo', $prompt) }}">
-                    @csrf
-                    <div class="flex gap-2">
-                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-lg">✨ Сгенерировать SEO</button>
+                <div class="flex gap-2">
+                    <button type="button" id="generate-seo-btn" class="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-lg">✨ Сгенерировать SEO</button>
                     <button type="button" id="improve-prompt-btn" class="bg-orange-600 hover:bg-orange-700 text-white text-sm px-4 py-2 rounded-lg">🤖 Улучшить промпт</button>
                 </div>
-                </form>
             </div>
             <div class="space-y-3">
                 <div>
@@ -296,5 +293,38 @@
 })();
 </script>
 @endpush
+
+
+<script>
+(function() {
+    const generateSeoBtn = document.getElementById('generate-seo-btn');
+    if (!generateSeoBtn) return;
+    
+    generateSeoBtn.addEventListener('click', function() {
+        const mainForm = this.closest('form');
+        const csrfToken = mainForm.querySelector('input[name="_token"]')?.value;
+        const seoUrl = @json(route('admin.quick-prompts.generate-seo', $prompt ?? 0));
+        
+        if (!seoUrl || seoUrl.includes('/0')) {
+            alert('Сначала сохраните промпт, чтобы сгенерировать SEO');
+            return;
+        }
+        
+        // Создаём отдельную форму для SEO-генерации
+        const seoForm = document.createElement('form');
+        seoForm.method = 'POST';
+        seoForm.action = seoUrl;
+        
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = csrfToken;
+        seoForm.appendChild(csrf);
+        
+        document.body.appendChild(seoForm);
+        seoForm.submit();
+    });
+})();
+</script>
 
 @endsection
