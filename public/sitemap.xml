@@ -21,12 +21,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://my.neiro-jurist.ru/consult/claim_shop</loc>
-    <lastmod>2026-09-02T22:16:51+03:00</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://my.neiro-jurist.ru/consult/layoff_rights</loc>
     <lastmod>2026-09-02T22:16:56+03:00</lastmod>
     <changefreq>monthly</changefreq>
@@ -208,13 +202,13 @@
   </url>
   <url>
     <loc>https://my.neiro-jurist.ru/consult/complaint_official</loc>
-    <lastmod>2026-09-05T21:37:49+03:00</lastmod>
+    <lastmod>2026-09-05T22:57:05+03:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://my.neiro-jurist.ru/consult/bailiff_complaint</loc>
-    <lastmod>2026-09-05T21:37:55+03:00</lastmod>
+    <lastmod>2026-09-05T22:57:37+03:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -232,7 +226,7 @@
   </url>
   <url>
     <loc>https://my.neiro-jurist.ru/consult/police_complaint</loc>
-    <lastmod>2026-09-05T21:38:16+03:00</lastmod>
+    <lastmod>2026-09-05T22:58:47+03:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -539,6 +533,78 @@
   <url>
     <loc>https://my.neiro-jurist.ru/consult/pension_for_deceased</loc>
     <lastmod>2026-09-05T21:53:57+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_return_goods</loc>
+    <lastmod>2026-09-06T00:09:51+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_defective_goods</loc>
+    <lastmod>2026-09-06T00:09:57+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_lost_delivery</loc>
+    <lastmod>2026-09-06T00:10:02+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_wrong_item</loc>
+    <lastmod>2026-09-06T00:10:09+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_refund_delay</loc>
+    <lastmod>2026-09-06T00:10:15+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_seller_blocked</loc>
+    <lastmod>2026-09-06T00:10:21+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_seller_fines</loc>
+    <lastmod>2026-09-06T00:10:27+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_fake_review</loc>
+    <lastmod>2026-09-06T00:10:33+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_pvz_issue</loc>
+    <lastmod>2026-09-06T00:10:39+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_price_change</loc>
+    <lastmod>2026-09-06T00:10:45+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_courier_damage</loc>
+    <lastmod>2026-09-06T00:10:51+03:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://my.neiro-jurist.ru/consult/mp_points_wallet</loc>
+    <lastmod>2026-09-06T00:10:58+03:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
