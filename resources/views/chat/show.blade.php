@@ -343,7 +343,7 @@
             {{-- Ссылка на каталог — ВСЕГДА видна, даже после отправки сообщений --}}
             <div class="mt-3 text-center">
                 <a href="{{ route('prompts.index') }}" class="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition">
-                    📚 Весь каталог консультаций ({{ $quickPrompts->count() }} тем) →
+                    📚 Весь каталог консультаций →
                 </a>
             </div>
 </div>
