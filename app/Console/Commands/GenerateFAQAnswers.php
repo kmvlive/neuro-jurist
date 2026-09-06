@@ -57,7 +57,7 @@ class GenerateFAQAnswers extends Command
                 $answers = json_decode($response, true);
 
                 if (!is_array($answers) || count($answers) !== count($questions)) {
-                    $this->error("  ✗ AI вернул {$count($answers)} ответов вместо " . count($questions));
+                    $this->error("  ✗ AI вернул {count($answers)} ответов вместо " . count($questions));
                     continue;
                 }
 
