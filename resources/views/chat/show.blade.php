@@ -85,7 +85,7 @@
             <form method="POST" action="{{ route('chat.create') }}" class="flex-1 mr-2">
                 @csrf
                 <button type="submit" class="w-full bg-primary hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center space-x-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
                     <span>Новый чат</span>
@@ -131,7 +131,7 @@
                             @csrf
                             @method('DELETE')
                             <button type="submit" onclick="event.stopPropagation();" class="text-red-500 hover:text-red-700">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/>
                                 </svg>
                             </button>
@@ -175,12 +175,12 @@
                 </span>
             @endif
             <button type="button" id="search-toggle"
-                    class="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
+                    class="flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
                     title="Поиск по чату">
                 🔍
             </button>
             <button type="button" id="voice-toggle"
-                    class="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
+                    class="flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
                     title="Озвучивать ответы AI">
                 🔊
             </button>
@@ -242,7 +242,7 @@
                                             <span class="block text-xs font-medium truncate">{{ $msg->file_name }}</span>
                                             <span class="block text-[10px] opacity-70">{{ $fm[1] }}@if($msg->file_size) · {{ $msg->file_size >= 1048576 ? round($msg->file_size / 1048576, 1) . ' МБ' : round($msg->file_size / 1024) . ' КБ' }}@endif</span>
                                         </span>
-                                        <svg class="w-4 h-4 opacity-50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5 opacity-50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                         </svg>
                                     </a>
@@ -274,7 +274,7 @@
                         <span id="file-size" class="block text-xs text-gray-500 dark:text-gray-400"></span>
                     </span>
                     <button type="button" id="file-remove" class="text-red-500 hover:text-red-700 flex-shrink-0 p-1" title="Убрать файл">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
@@ -1134,3 +1134,128 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+/* Улучшения для мобильного UX */
+@media (max-width: 768px) {
+    /* Увеличиваем кнопки для тач-таргетов */
+    .chat-button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    /* Улучшенная прокрутка сообщений */
+    #messages-container {
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Индикатор "печатает..." */
+    .typing-indicator {
+        display: inline-flex;
+        gap: 4px;
+        padding: 8px 12px;
+    }
+    .typing-indicator span {
+        width: 6px;
+        height: 6px;
+        background: #9ca3af;
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+        0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-4px); }
+    }
+    
+    /* Фиксированное поле ввода */
+    .input-container {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 12px;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    /* Быстрые промпты в свайп-карусели */
+    .quick-prompts-mobile {
+        display: flex;
+        overflow-x: auto;
+        gap: 8px;
+        padding: 8px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+    .quick-prompts-mobile > * {
+        scroll-snap-align: start;
+        flex-shrink: 0;
+        min-width: 200px;
+    }
+}
+
+/* Плавная анимация сообщений */
+.message-appear {
+    animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+(function() {
+    // Добавляем класс для анимации новых сообщений
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1 && node.classList.contains('message-container')) {
+                    node.classList.add('message-appear');
+                }
+            });
+        });
+    });
+    
+    const container = document.getElementById('messages-container');
+    if (container) {
+        observer.observe(container, { childList: true });
+    }
+    
+    // Функция показа индикатора "печатает..."
+    window.showTypingIndicator = function() {
+        const container = document.getElementById('messages-container');
+        if (!container || document.getElementById('typing-indicator')) return;
+        
+        const indicator = document.createElement('div');
+        indicator.id = 'typing-indicator';
+        indicator.className = 'flex justify-start mb-4';
+        indicator.innerHTML = `
+            <div class="max-w-[85%] rounded-lg px-4 py-2 bg-gray-200 dark:bg-gray-700">
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        container.appendChild(indicator);
+        container.scrollTop = container.scrollHeight;
+    };
+    
+    // Функция скрытия индикатора
+    window.hideTypingIndicator = function() {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) indicator.remove();
+    };
+})();
+</script>
+@endpush
