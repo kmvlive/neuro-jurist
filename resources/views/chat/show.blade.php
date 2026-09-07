@@ -874,7 +874,13 @@ document.addEventListener('DOMContentLoaded', function() {
         input.disabled = true;
         
         try {
+            // Показываем индикатор 'печатает...' на мобильных
+            if (window.showTypingIndicator) window.showTypingIndicator();
+            
             const response = await fetch(form.action, { method: 'POST', body: formData });
+            
+            // Скрываем индикатор после получения ответа
+            if (window.hideTypingIndicator) window.hideTypingIndicator();
             if (!response.ok) {
                 let errorMsg = 'Ошибка ' + response.status;
                 try {
